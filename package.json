@@ -1,0 +1,19 @@
+{
+  "name": "accounts-intake-hub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Single-file accounts intake app for a law-firm accounts team: capture, maker/checker approval, statutory reminders, FoxPro/Excel/CSV export.",
+  "scripts": {
+    "build": "node scripts/build.js --prod",
+    "build:test": "node scripts/build.js",
+    "test:core": "node scripts/test.js",
+    "test:i18n": "node scripts/i18ncheck.js",
+    "test:smoke": "npm run build:test && node tests/smoke.js",
+    "test": "npm run test:core && npm run test:i18n && npm run test:smoke"
+  },
+  "devDependencies": {
+    "jsdom": "^29.1.1",
+    "xlsx": "0.18.5"
+  },
+  "engines": { "node": ">=20" }
+}

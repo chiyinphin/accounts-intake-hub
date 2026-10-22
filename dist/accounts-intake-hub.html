@@ -1,0 +1,2318 @@
+<title>Accounts Intake Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap">
+<style>
+:root {
+  /* Layout: one working column. Tab strip on desktop, bottom bar on phones, entry details in a side drawer.
+     Ledger green is the accent. Brass marks the client ledger so the two books never look alike. */
+  --bg: #f2f4f1; --surface: #ffffff; --surface-2: #e9ede8; --ink: #17201b; --muted: #56635b; --line: #d3dad3;
+  --accent: #1c5a49; --accent-ink: #ffffff; --accent-soft: #dcebe5;
+  --brass: #7d5409; --brass-soft: #f4e7c8;
+  --ok: #24703f; --ok-soft: #dcefe3; --warn: #8f5300; --warn-soft: #faebd0; --bad: #a42d25; --bad-soft: #f8dedb;
+  --info: #2a5a95; --info-soft: #dde8f5; --neutral-soft: #e4e8e3; --scrim: rgba(12, 20, 16, .45);
+  --shadow: 0 1px 2px rgba(20, 32, 26, .06), 0 8px 24px rgba(20, 32, 26, .08);
+  --f-display: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --f-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --f-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --r: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+--bg: #0e1411; --surface: #151e19; --surface-2: #1d2924; --ink: #e4ebe6; --muted: #9aaaa1; --line: #2a3832;
+--accent: #54b595; --accent-ink: #06130d; --accent-soft: #17352b;
+--brass: #e3b052; --brass-soft: #372b12;
+--ok: #5cc283; --ok-soft: #173220; --warn: #e8a63f; --warn-soft: #36280f; --bad: #f28a80; --bad-soft: #3b1b18;
+--info: #86b5f2; --info-soft: #17293f; --neutral-soft: #212c26; --scrim: rgba(0, 0, 0, .6);
+--shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+--bg: #0e1411; --surface: #151e19; --surface-2: #1d2924; --ink: #e4ebe6; --muted: #9aaaa1; --line: #2a3832;
+--accent: #54b595; --accent-ink: #06130d; --accent-soft: #17352b;
+--brass: #e3b052; --brass-soft: #372b12;
+--ok: #5cc283; --ok-soft: #173220; --warn: #e8a63f; --warn-soft: #36280f; --bad: #f28a80; --bad-soft: #3b1b18;
+--info: #86b5f2; --info-soft: #17293f; --neutral-soft: #212c26; --scrim: rgba(0, 0, 0, .6);
+--shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 8px 24px rgba(0, 0, 0, .35);
+color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { background: var(--bg); }
+body {
+  margin: 0; color: var(--ink); background: var(--bg); font: 15px/1.5 var(--f-body);
+  -webkit-text-size-adjust: 100%;
+}
+#app { min-height: 100%; padding-block: 0 88px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+@media (min-width: 900px) { #app { padding-block-end: 48px; } }
+.wrap { max-width: 1120px; margin: 0 auto; }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font: 600 1.7rem/1.15 var(--f-display); letter-spacing: -.01em; }
+h2 { font: 600 1.25rem/1.2 var(--f-display); }
+h3 { font: 600 .78rem/1.2 var(--f-body); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.small { font-size: .86rem; }
+.mono, .num, .er-id { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.num { white-space: nowrap; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding-block: 14px 10px; max-width: 1120px; margin: 0 auto; }
+.brand { display: flex; flex-direction: column; min-width: 0; }
+.brand .name { font: 600 1.35rem/1.1 var(--f-display); letter-spacing: -.01em; }
+.brand .sub { font-size: .78rem; color: var(--muted); letter-spacing: .02em; }
+.who { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.who label { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--muted); }
+.who select { width: auto; max-width: 190px; }
+.role { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; padding: 2px 7px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.role.approver { color: var(--accent); border-color: var(--accent); }
+
+/* tabs */
+.tabs { display: none; max-width: 1120px; margin: 0 auto; border-bottom: 1px solid var(--line); gap: 2px; overflow-x: auto; }
+.tabs button { font: inherit; background: none; border: 0; border-bottom: 3px solid transparent; padding: 10px 12px 9px; color: var(--muted); cursor: pointer; display: inline-flex; gap: 7px; align-items: center; white-space: nowrap; }
+.tabs button:hover { color: var(--ink); }
+.tabs button[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent); font-weight: 600; }
+.badge { min-width: 1.3em; padding: 0 6px; border-radius: 99px; background: var(--accent); color: var(--accent-ink); font-size: .72rem; line-height: 1.5; text-align: center; font-weight: 600; }
+.badge.warn { background: var(--bad); color: #fff; }
+.ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+@media (min-width: 900px) { .tabs { display: flex; } .bottom, .more-sheet { display: none !important; } }
+.bottom { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); border-top: 1px solid var(--line); padding: 4px max(6px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(6px, env(safe-area-inset-left, 0px)); }
+.bottom button { font: inherit; font-size: .7rem; background: none; border: 0; color: var(--muted); padding: 6px 2px; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; position: relative; min-width: 0; }
+.bottom button[aria-current="page"] { color: var(--accent); font-weight: 600; }
+.bottom .badge { position: absolute; top: 0; right: 18%; }
+.more-sheet { position: fixed; left: 0; right: 0; bottom: calc(58px + env(safe-area-inset-bottom, 0px)); z-index: 19; background: var(--surface); border-top: 1px solid var(--line); box-shadow: var(--shadow); padding: 8px max(12px, env(safe-area-inset-right, 0px)) 8px max(12px, env(safe-area-inset-left, 0px)); display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+.more-sheet button { font: inherit; text-align: left; background: var(--surface-2); border: 0; border-radius: 6px; padding: 11px 12px; color: var(--ink); display: flex; gap: 8px; align-items: center; cursor: pointer; }
+
+/* layout bits */
+main { max-width: 1120px; margin: 0 auto; padding-top: 18px; display: block; }
+.page-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 16px; margin-bottom: 16px; }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.grow { flex: 1 1 auto; min-width: 0; }
+.grid2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 900px) { .grid2 { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; } .grid2.even { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
+.card > h3 { margin-bottom: 10px; }
+.card.flat { background: transparent; border-style: dashed; }
+.note { background: var(--info-soft); color: var(--ink); border-radius: 6px; padding: 9px 12px; font-size: .88rem; }
+.note.warn { background: var(--warn-soft); } .note.bad { background: var(--bad-soft); } .note.ok { background: var(--ok-soft); }
+.scroll { overflow-x: auto; max-width: 100%; }
+
+/* kpis */
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 700px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+.kpi { font: inherit; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; cursor: pointer; color: var(--ink); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.kpi:hover { border-color: var(--accent); }
+.kpi-l { font-size: .74rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.kpi-n { font: 600 1.9rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.kpi-s { font-size: .8rem; color: var(--muted); }
+.kpi.bad .kpi-n { color: var(--bad); } .kpi.warn .kpi-n { color: var(--warn); }
+.kpi .pair { display: grid; grid-template-columns: auto 1fr; gap: 0 8px; font-size: .84rem; align-items: baseline; }
+.kpi .pair b { font: 500 .86rem var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; min-width: 0; overflow-wrap: anywhere; }
+.kpi .pair { grid-template-columns: auto minmax(0, 1fr); }
+
+/* chips and tags */
+.chip { display: inline-block; font-size: .72rem; font-weight: 600; letter-spacing: .03em; padding: 2px 8px; border-radius: 99px; white-space: nowrap; background: var(--neutral-soft); color: var(--muted); }
+.st-submitted { background: var(--info-soft); color: var(--info); }
+.st-approved { background: var(--ok-soft); color: var(--ok); }
+.st-returned { background: var(--warn-soft); color: var(--warn); }
+.st-rejected { background: var(--bad-soft); color: var(--bad); }
+.st-exported { background: var(--accent-soft); color: var(--accent); }
+.st-overdue { background: var(--bad-soft); color: var(--bad); } .st-soon { background: var(--warn-soft); color: var(--warn); }
+.st-done { background: var(--ok-soft); color: var(--ok); } .st-upcoming { background: var(--neutral-soft); color: var(--muted); }
+.ltag { display: inline-block; font-size: .72rem; font-weight: 600; padding: 1px 8px; border-radius: 4px; letter-spacing: .03em; white-space: nowrap; }
+.l-office { border: 1px solid var(--accent); color: var(--accent); }
+.l-client { background: var(--brass-soft); color: var(--brass); border: 1px solid var(--brass-soft); }
+.type { font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+
+/* entry rows */
+.list { display: flex; flex-direction: column; }
+.erow { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 14px; align-items: center; padding: 11px 6px; border-top: 1px solid var(--line); cursor: pointer; border-radius: 4px; }
+.erow:first-child { border-top: 0; }
+.erow:hover { background: var(--surface-2); }
+.er-main { display: flex; flex-direction: column; min-width: 0; }
+.er-id { font-size: .75rem; color: var(--muted); }
+.er-payee { font-weight: 600; overflow-wrap: anywhere; }
+.er-desc { font-size: .85rem; color: var(--muted); overflow-wrap: anywhere; }
+.er-tags { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.er-amt { display: flex; flex-direction: column; align-items: flex-end; min-width: 6.5rem; }
+.er-amt .num { font-weight: 500; }
+.er-date { font-size: .78rem; color: var(--muted); font-family: var(--f-mono); }
+.er-act { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.er-sel { display: flex; align-items: center; gap: 10px; }
+@media (max-width: 640px) {
+  .erow { grid-template-columns: minmax(0, 1fr) auto; }
+  .er-main { grid-column: 1 / -1; }
+  .er-tags { justify-content: flex-start; }
+}
+.empty { padding: 22px 8px; color: var(--muted); text-align: center; }
+
+/* forms and buttons */
+input, select, textarea { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; width: 100%; min-width: 0; }
+input[type="checkbox"], input[type="radio"] { width: auto; accent-color: var(--accent); }
+textarea { resize: vertical; min-height: 84px; }
+input:disabled, select:disabled { opacity: .6; }
+.invalid { border-color: var(--bad) !important; }
+.ferr { color: var(--bad); font-size: .8rem; min-height: 0; }
+.ferr:empty { display: none; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.fields .full { grid-column: 1 / -1; }
+@media (max-width: 560px) { .fields { grid-template-columns: minmax(0, 1fr); } }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field > label, .lbl { font-size: .8rem; font-weight: 600; color: var(--muted); }
+.btn { font: inherit; font-weight: 500; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; justify-content: center; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger { color: var(--bad); border-color: var(--bad); }
+.btn.quiet { border-color: transparent; background: transparent; color: var(--accent); padding: 6px 8px; }
+.btn.sm { padding: 4px 10px; font-size: .84rem; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--surface); flex-wrap: wrap; }
+.seg label { display: block; position: relative; cursor: pointer; font-size: .88rem; font-weight: 500; color: var(--ink); }
+.seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.seg span { display: block; padding: 7px 14px; }
+.seg input:checked + span { background: var(--accent); color: var(--accent-ink); }
+.seg input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: -2px; }
+.seg.tabs2 button { font: inherit; border: 0; background: none; padding: 7px 14px; cursor: pointer; color: var(--ink); }
+.seg.tabs2 button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.totalbox { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0 6px; border-top: 1px solid var(--ink); border-bottom: 4px double var(--ink); margin-top: 4px; }
+.totalbox .num { font-size: 1.35rem; font-weight: 500; }
+.drop { display: flex; flex-direction: column; gap: 4px; align-items: center; justify-content: center; text-align: center; border: 2px dashed var(--line); border-radius: var(--r); padding: 26px 14px; cursor: pointer; color: var(--muted); background: var(--surface); }
+.drop.over, .drop:hover { border-color: var(--accent); color: var(--ink); }
+.drop strong { color: var(--ink); }
+.attach { display: flex; gap: 10px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); min-width: 0; }
+.attach img { width: 64px; height: 64px; object-fit: cover; border-radius: 4px; flex: none; }
+.attach .fi { width: 64px; height: 64px; border-radius: 4px; background: var(--surface-2); display: grid; place-items: center; font: 600 .75rem var(--f-mono); color: var(--muted); flex: none; }
+.attach .meta { min-width: 0; flex: 1; overflow-wrap: anywhere; font-size: .86rem; }
+.found { display: flex; flex-wrap: wrap; gap: 6px; }
+.found .chip { background: var(--accent-soft); color: var(--accent); }
+.found .chip.miss { background: var(--neutral-soft); color: var(--muted); }
+
+/* tables */
+table { border-collapse: collapse; width: 100%; font-size: .88rem; }
+th { text-align: left; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; padding: 6px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+td.r, th.r { text-align: right; }
+td input, td select { padding: 5px 8px; font-size: .88rem; }
+tr.tot td { border-top: 1px solid var(--ink); border-bottom: 4px double var(--ink); font-weight: 600; }
+.pass { color: var(--ok); font-weight: 600; } .fail { color: var(--bad); font-weight: 600; }
+
+/* compliance */
+.rem { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 14px; padding: 12px 0; border-top: 1px solid var(--line); align-items: center; }
+.rem:first-child { border-top: 0; }
+.rem .t { font-weight: 600; overflow-wrap: anywhere; }
+.rem .d { font-size: .85rem; color: var(--muted); }
+.rem .act { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.rem .done-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) auto; gap: 8px; width: 100%; }
+@media (max-width: 560px) { .rem .done-form { grid-template-columns: minmax(0, 1fr); } }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chips button { font: inherit; font-size: .84rem; border: 1px solid var(--line); background: var(--surface); border-radius: 99px; padding: 4px 12px; cursor: pointer; color: var(--ink); }
+.chips button:hover { border-color: var(--accent); }
+
+/* drawer */
+#scrim { position: fixed; inset: 0; background: var(--scrim); z-index: 30; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(480px, 100%); z-index: 31; background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
+.drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 16px max(16px, env(safe-area-inset-right, 0px)) 10px 16px; border-bottom: 1px solid var(--line); }
+.drawer-body { overflow-y: auto; padding: 14px max(16px, env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) 16px; display: flex; flex-direction: column; gap: 14px; }
+.kv { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr); gap: 5px 12px; font-size: .9rem; }
+.kv dt { color: var(--muted); } .kv dd { margin: 0; overflow-wrap: anywhere; }
+.hist { display: flex; flex-direction: column; gap: 6px; font-size: .84rem; }
+.hist div { display: grid; grid-template-columns: 8.4rem minmax(0, 1fr); gap: 8px; }
+.hist .ts { font-family: var(--f-mono); color: var(--muted); font-size: .76rem; }
+@media (max-width: 560px) { .hist div { grid-template-columns: minmax(0, 1fr); gap: 0; } .kv { grid-template-columns: minmax(0, 1fr); gap: 0; } .kv dd { margin-bottom: 6px; } }
+
+/* toast */
+#toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(72px + env(safe-area-inset-bottom, 0px)); z-index: 40; display: flex; flex-direction: column; gap: 8px; align-items: center; width: min(560px, calc(100% - 32px)); pointer-events: none; }
+@media (min-width: 900px) { #toast { bottom: 28px; } }
+.toast { background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 6px; box-shadow: var(--shadow); font-size: .9rem; pointer-events: auto; }
+.toast.bad { background: var(--bad); color: #fff; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: tin .18s ease-out; } @keyframes tin { from { opacity: 0; transform: translateY(6px); } } }
+
+</style>
+<div id="app">
+  <header class="top">
+    <div class="brand"><span class="name" id="brand-name">Accounts Intake Hub</span><span class="sub" id="brand-sub"></span></div>
+    <div class="who">
+      <label><span id="who-label"></span><select id="user-select" aria-label="User"></select></label>
+      <span id="role-pill" class="role"></span>
+      <button class="btn sm" id="lang-btn" type="button"></button>
+    </div>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  <main id="view"></main>
+</div>
+<nav class="bottom" id="bottom" aria-label="Sections"></nav>
+<div class="more-sheet" id="more-sheet" hidden></div>
+<div id="scrim" hidden></div>
+<aside class="drawer" id="drawer" hidden aria-label="Entry details"></aside>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* Accounts Intake Hub: core logic. Pure functions, no DOM. Shared by the page and the Node tests. */
+var Core = (function () {
+  'use strict';
+
+  /* ---------- clock ---------- */
+  var clockFn = function () { return new Date(); };
+  function setClock(fn) { clockFn = fn || function () { return new Date(); }; }
+  function nowISO() { return clockFn().toISOString(); }
+  function pad(n, w) { return String(n).padStart(w || 2, '0'); }
+  function todayLocal() {
+    var d = clockFn();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function localDateOf(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d)) return '';
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+
+  /* ---------- constants ---------- */
+  var TYPES = ['bill', 'payment', 'receipt'];
+  var LEDGERS = ['office', 'client'];
+  var SOURCES = ['whatsapp', 'email', 'scan', 'upload', 'other'];
+  var STATUSES = ['inbox', 'draft', 'submitted', 'approved', 'returned', 'rejected', 'exported'];
+  var CATEGORIES = ['Utilities', 'Telecoms', 'Courier & postage', 'Stationery & printing', 'Court fees', 'Stamp duty',
+    'Search & registration fees', 'Rent', 'Professional fees', 'Travel', 'Statutory contributions', 'Client deposit', 'Other'];
+  var EDITABLE = ['type', 'source', 'docDate', 'payee', 'refNo', 'description', 'category', 'netAmount', 'taxAmount',
+    'ledger', 'matterNo', 'attachments', 'rawText'];
+  var DIFF_KEYS = EDITABLE.concat(['totalAmount']);
+  var SRC_FIELDS = ['id', 'docDate', 'type', 'payee', 'refNo', 'description', 'netAmount', 'taxAmount', 'totalAmount',
+    'ledger', 'matterNo', 'category', 'createdBy', 'approvedBy', 'approvedAt', 'source', 'status', 'exportBatchId', 'currency'];
+  var DATE_SRC = { docDate: 1, approvedAt: 1 };
+  var NUM_SRC = { netAmount: 1, taxAmount: 1, totalAmount: 1 };
+  var UPPER_SRC = { type: 1, ledger: 1, source: 1, status: 1 };
+
+  function CoreError(code, message, extra) {
+    var e = new Error(message || code);
+    e.name = 'CoreError';
+    e.code = code;
+    e.extra = extra || {};
+    return e;
+  }
+
+  /* ---------- number and date helpers ---------- */
+  function round2(n) {
+    var x = Number(n);
+    if (!isFinite(x)) return 0;
+    return (x < 0 ? -1 : 1) * Math.round(Math.abs(x) * 100 + 1e-7) / 100;
+  }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+  function fmtMoney(n) {
+    var v = round2(n), neg = v < 0, s = Math.abs(v).toFixed(2).split('.');
+    return (neg ? '-' : '') + 'RM ' + s[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '.' + s[1];
+  }
+  function fmtNumber(n, decimal) {
+    var s = round2(n).toFixed(2);
+    return decimal === ',' ? s.replace('.', ',') : s;
+  }
+  function parseISO(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+    if (!m) return null;
+    var y = +m[1], mo = +m[2], d = +m[3];
+    var dt = new Date(Date.UTC(y, mo - 1, d));
+    if (dt.getUTCFullYear() !== y || dt.getUTCMonth() !== mo - 1 || dt.getUTCDate() !== d) return null;
+    return dt;
+  }
+  function toISO(dt) { return dt.getUTCFullYear() + '-' + pad(dt.getUTCMonth() + 1) + '-' + pad(dt.getUTCDate()); }
+  function addDays(iso, n) { var dt = parseISO(iso); dt.setUTCDate(dt.getUTCDate() + n); return toISO(dt); }
+  function diffDays(aIso, bIso) { return Math.round((parseISO(aIso) - parseISO(bIso)) / 86400000); }
+  function fmtDate(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+    return m ? m[3] + '/' + m[2] + '/' + m[1] : '';
+  }
+  function fmtByPattern(iso, pattern) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+    if (!m) return '';
+    if (pattern === 'YYYYMMDD') return m[1] + m[2] + m[3];
+    if (pattern === 'YYYY-MM-DD') return m[1] + '-' + m[2] + '-' + m[3];
+    return m[3] + '/' + m[2] + '/' + m[1];
+  }
+  function rollDue(iso, rule) {
+    if (!rule || rule === 'none') return iso;
+    var cur = iso;
+    for (var i = 0; i < 4; i++) {
+      var dow = parseISO(cur).getUTCDay();
+      if (dow !== 0 && dow !== 6) break;
+      cur = addDays(cur, rule === 'prev' ? -1 : 1);
+    }
+    return cur;
+  }
+  /* Contributions for wage month YYYY-MM fall due on dueDay of the following month. */
+  function statutoryDue(ym, dueDay, rule) {
+    var p = ym.split('-'), y = +p[0], m = +p[1];
+    var ny = y, nm = m + 1;
+    if (nm > 12) { nm = 1; ny++; }
+    var dim = new Date(Date.UTC(ny, nm, 0)).getUTCDate();
+    var day = Math.min(Math.max(1, Math.floor(dueDay)), dim);
+    return rollDue(ny + '-' + pad(nm) + '-' + pad(day), rule);
+  }
+  function reminderStatus(r, today) {
+    if (r.status === 'done') return 'done';
+    var d = diffDays(r.due, today);
+    if (d < 0) return 'overdue';
+    if (d <= 7) return 'soon';
+    return 'upcoming';
+  }
+
+  /* ---------- settings and state ---------- */
+  function defaultFoxMap() {
+    return [
+      ['DOCNO', 'id'], ['DOCDATE', 'docDate'], ['DOCTYPE', 'type'], ['PAYEE', 'payee'], ['REFNO', 'refNo'],
+      ['DESCRIP', 'description'], ['NETAMT', 'netAmount'], ['TAXAMT', 'taxAmount'], ['TOTAMT', 'totalAmount'],
+      ['LEDGER', 'ledger'], ['MATTERNO', 'matterNo'], ['CATEGORY', 'category'], ['MAKER', 'createdBy'],
+      ['CHECKER', 'approvedBy'], ['APPRDATE', 'approvedAt']
+    ].map(function (p) { return { name: p[0], src: p[1], enabled: true }; });
+  }
+  function defaultSettings() {
+    return {
+      lang: 'en',
+      rollRule: 'next',
+      dueDays: { EPF: 15, SOCSO: 15, EIS: 15, PCB: 15 },
+      rates: {
+        epfEmployerLow: 13, epfEmployerHigh: 12, epfThreshold: 5000, epfEmployee: 11, epfRoundUp: true,
+        socsoEmployer: 1.75, socsoEmployee: 0.5, socsoCeiling: 6000,
+        eisEmployer: 0.2, eisEmployee: 0.2, eisCeiling: 6000
+      },
+      export: { dateFmt: 'YYYYMMDD', delimiter: ',', decimal: '.', header: true, foxBom: false, foxUpper: true, map: defaultFoxMap() }
+    };
+  }
+  function emptyState() {
+    return {
+      v: 1,
+      seq: { entry: 0, audit: 0, batch: 0, reminder: 0 },
+      users: [], matters: [], entries: [], reminders: [], audit: [], batches: [],
+      settings: defaultSettings()
+    };
+  }
+  function userById(state, id) { return state.users.filter(function (u) { return u.id === id; })[0] || null; }
+  function userName(state, id) { var u = userById(state, id); return u ? u.name : (id || ''); }
+  function isApprover(u) { return !!u && u.role === 'approver'; }
+  function findEntry(state, id) { return state.entries.filter(function (e) { return e.id === id; })[0] || null; }
+  function findMatter(state, no) {
+    var n = String(no || '').trim().toLowerCase();
+    return state.matters.filter(function (m) { return m.matterNo.toLowerCase() === n; })[0] || null;
+  }
+  function ctxFor(state) { return { userName: function (id) { return userName(state, id); } }; }
+
+  /* ---------- audit ---------- */
+  function audit(state, user, action, entryId, before, after, note) {
+    state.seq.audit = (state.seq.audit || 0) + 1;
+    state.audit.push({
+      id: 'AUD-' + pad(state.seq.audit, 6), ts: nowISO(), user: user ? user.id : 'system', action: action,
+      entryId: entryId || '', before: before || null, after: after || null, note: note || ''
+    });
+  }
+  function diff(a, b, keys) {
+    var before = {}, after = {}, changed = false;
+    keys.forEach(function (k) {
+      var x = JSON.stringify(a ? a[k] : undefined), y = JSON.stringify(b[k]);
+      if (x !== y) { before[k] = a ? a[k] : null; after[k] = b[k]; changed = true; }
+    });
+    return changed ? { before: before, after: after } : null;
+  }
+  function summaryOf(e) {
+    return { type: e.type, payee: e.payee, docDate: e.docDate, totalAmount: e.totalAmount, ledger: e.ledger, matterNo: e.matterNo, status: e.status };
+  }
+
+  /* ---------- entries ---------- */
+  function blankEntry(user) {
+    return {
+      id: null, type: 'bill', source: 'upload', docDate: '', payee: '', refNo: '', description: '', category: '',
+      netAmount: 0, taxAmount: 0, totalAmount: 0, currency: 'MYR', ledger: 'office', matterNo: '',
+      status: 'draft', createdBy: user ? user.id : '', createdAt: '', approvedBy: '', approvedAt: '',
+      rejectReason: '', returnComment: '', duplicateOverrideReason: '', balanceOverrideReason: '',
+      attachments: [], exportBatchId: '', rawText: ''
+    };
+  }
+  function nextEntryId(state) {
+    state.seq.entry = (state.seq.entry || 0) + 1;
+    return 'ENT-' + clockFn().getFullYear() + '-' + pad(state.seq.entry, 4);
+  }
+  function computeTotal(net, tax) { return round2(round2(net) + round2(tax)); }
+  function applyPatch(e, patch) {
+    EDITABLE.forEach(function (k) {
+      if (!(k in patch)) return;
+      var v = patch[k];
+      if (k === 'netAmount' || k === 'taxAmount') v = round2(v);
+      else if (k === 'attachments') v = (v || []).map(function (a) { return { name: String(a.name), size: +a.size || 0, type: String(a.type || '') }; });
+      else v = String(v === null || v === undefined ? '' : v).trim();
+      e[k] = v;
+    });
+    e.totalAmount = computeTotal(e.netAmount, e.taxAmount); // R2
+  }
+  function validateEntry(e, state) {
+    var err = {};
+    if (TYPES.indexOf(e.type) < 0) err.type = 'invalid';
+    if (!parseISO(e.docDate)) err.docDate = e.docDate ? 'invalid_date' : 'required';
+    if (!String(e.payee || '').trim()) err.payee = 'required';
+    if (!(Number(e.netAmount) > 0)) err.netAmount = 'amount_positive';
+    if (!(Number(e.taxAmount) >= 0)) err.taxAmount = 'invalid_amount';
+    if (LEDGERS.indexOf(e.ledger) < 0) err.ledger = 'invalid';
+    else if (e.ledger === 'client') { // R1
+      if (!String(e.matterNo || '').trim()) err.matterNo = 'matter_required';
+      else if (!findMatter(state, e.matterNo)) err.matterNo = 'matter_unknown';
+    }
+    return err;
+  }
+  function normText(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+  /* R3: same payee + total + date, or same ref + payee. Rejected and inbox items are ignored. */
+  function findDuplicates(e, entries) {
+    return entries.filter(function (o) {
+      if (o.id === e.id || o.status === 'rejected' || o.status === 'inbox') return false;
+      var samePayee = normText(o.payee) !== '' && normText(o.payee) === normText(e.payee);
+      if (!samePayee) return false;
+      var byAmountDate = round2(o.totalAmount) === round2(e.totalAmount) && o.docDate === e.docDate;
+      var byRef = normText(e.refNo) !== '' && normText(o.refNo) === normText(e.refNo);
+      return byAmountDate || byRef;
+    });
+  }
+  /* R7: client-ledger payment above the matter's client balance. */
+  function balanceBreach(e, state) {
+    if (e.ledger !== 'client' || e.type !== 'payment') return null;
+    var m = findMatter(state, e.matterNo);
+    if (!m) return null;
+    if (round2(e.totalAmount) > round2(m.clientBalance)) {
+      return { matterNo: m.matterNo, clientName: m.clientName, balance: round2(m.clientBalance), total: round2(e.totalAmount), shortBy: round2(e.totalAmount - m.clientBalance) };
+    }
+    return null;
+  }
+  function entryWarnings(e, state) {
+    return { duplicates: findDuplicates(e, state.entries).map(function (d) { return d.id; }), balance: balanceBreach(e, state) };
+  }
+  function assertEditable(e, user) {
+    if (e.status === 'approved' || e.status === 'exported') throw CoreError('IMMUTABLE', 'Approved entries are locked.'); // R6
+    if (e.status === 'submitted') throw CoreError('LOCKED_SUBMITTED', 'Entry is awaiting approval.');
+    if (e.status === 'rejected') throw CoreError('LOCKED_REJECTED', 'Rejected entries cannot be edited.');
+    if (e.status !== 'inbox' && e.createdBy !== user.id && !isApprover(user)) throw CoreError('NOT_OWNER', 'Only the creator can edit this entry.');
+  }
+  function saveEntry(state, user, patch, id) {
+    var e;
+    if (id) {
+      e = findEntry(state, id);
+      if (!e) throw CoreError('NOT_FOUND', 'Entry not found.');
+      assertEditable(e, user);
+      var before = clone(e);
+      applyPatch(e, patch);
+      if (e.status === 'inbox') e.status = 'draft';
+      var d = diff(before, e, DIFF_KEYS.concat(['status']));
+      if (d) audit(state, user, 'edit', e.id, d.before, d.after, '');
+    } else {
+      e = blankEntry(user);
+      applyPatch(e, patch);
+      e.id = nextEntryId(state);
+      e.createdAt = nowISO();
+      e.status = 'draft';
+      state.entries.push(e);
+      audit(state, user, 'create', e.id, null, summaryOf(e), 'draft');
+    }
+    return e;
+  }
+  function addInboxItem(state, user, item) {
+    var e = blankEntry(user);
+    applyPatch(e, item || {});
+    e.id = nextEntryId(state);
+    e.createdAt = nowISO();
+    e.status = 'inbox';
+    state.entries.push(e);
+    audit(state, user, 'create', e.id, null, summaryOf(e), 'inbox: ' + e.source);
+    return e;
+  }
+  function cloneAsDraft(state, user, id) {
+    var o = findEntry(state, id);
+    if (!o) throw CoreError('NOT_FOUND', 'Entry not found.');
+    var n = saveEntry(state, user, o);
+    audit(state, user, 'create', n.id, null, null, 'copied from ' + o.id);
+    return n;
+  }
+  function submitEntry(state, user, id, opts) {
+    opts = opts || {};
+    var e = findEntry(state, id);
+    if (!e) throw CoreError('NOT_FOUND', 'Entry not found.');
+    if (e.status !== 'draft' && e.status !== 'returned') throw CoreError('BAD_STATE', 'Only drafts or returned entries can be submitted.');
+    if (e.createdBy !== user.id && !isApprover(user)) throw CoreError('NOT_OWNER', 'Only the creator can submit this entry.');
+    var errs = validateEntry(e, state);
+    if (Object.keys(errs).length) throw CoreError('VALIDATION', 'Entry has errors.', { errors: errs });
+    var dups = findDuplicates(e, state.entries);
+    var reason = String(opts.dupReason || '').trim();
+    if (dups.length && !reason) throw CoreError('DUPLICATE', 'Possible duplicate.', { duplicates: dups.map(function (d) { return d.id; }) }); // R3
+    var before = { status: e.status, duplicateOverrideReason: e.duplicateOverrideReason };
+    e.status = 'submitted';
+    e.returnComment = '';
+    e.duplicateOverrideReason = dups.length ? reason : '';
+    audit(state, user, 'submit', e.id, before, { status: 'submitted', duplicateOverrideReason: e.duplicateOverrideReason },
+      dups.length ? 'duplicate override; matches ' + dups.map(function (d) { return d.id; }).join(', ') : '');
+    return e;
+  }
+  function needApprover(user) { if (!isApprover(user)) throw CoreError('FORBIDDEN', 'Approver role required.'); }
+  function needSubmitted(e) {
+    if (!e) throw CoreError('NOT_FOUND', 'Entry not found.');
+    if (e.status !== 'submitted') throw CoreError('BAD_STATE', 'Entry is not awaiting approval.');
+  }
+  function approveEntry(state, user, id, opts) {
+    opts = opts || {};
+    needApprover(user);
+    var e = findEntry(state, id);
+    needSubmitted(e);
+    if (e.createdBy === user.id) throw CoreError('SELF_APPROVAL', 'You cannot approve an entry you created.'); // R4
+    var breach = balanceBreach(e, state), reason = String(opts.balanceReason || '').trim();
+    if (breach && !reason) throw CoreError('BALANCE_OVERRIDE_REQUIRED', 'Payment exceeds client balance.', { breach: breach }); // R7
+    e.status = 'approved';
+    e.approvedBy = user.id;
+    e.approvedAt = nowISO();
+    e.balanceOverrideReason = breach ? reason : '';
+    audit(state, user, 'approve', e.id, { status: 'submitted' }, { status: 'approved', approvedBy: user.id }, breach ? 'balance override: ' + reason : '');
+    return e;
+  }
+  function rejectEntry(state, user, id, reason) {
+    needApprover(user);
+    var e = findEntry(state, id);
+    needSubmitted(e);
+    reason = String(reason || '').trim();
+    if (!reason) throw CoreError('REASON_REQUIRED', 'A reason is required.'); // R5
+    e.status = 'rejected';
+    e.rejectReason = reason;
+    audit(state, user, 'reject', e.id, { status: 'submitted' }, { status: 'rejected' }, reason);
+    return e;
+  }
+  function returnEntry(state, user, id, comment) {
+    needApprover(user);
+    var e = findEntry(state, id);
+    needSubmitted(e);
+    comment = String(comment || '').trim();
+    if (!comment) throw CoreError('REASON_REQUIRED', 'A comment is required.'); // R5
+    e.status = 'returned';
+    e.returnComment = comment;
+    audit(state, user, 'return', e.id, { status: 'submitted' }, { status: 'returned' }, comment);
+    return e;
+  }
+  function reopenEntry(state, user, id, reason) {
+    needApprover(user);
+    var e = findEntry(state, id);
+    if (!e) throw CoreError('NOT_FOUND', 'Entry not found.');
+    if (e.status === 'exported') throw CoreError('EXPORTED_LOCKED', 'Entry is in an export batch and cannot be reopened.');
+    if (e.status !== 'approved') throw CoreError('BAD_STATE', 'Only approved entries can be reopened.');
+    reason = String(reason || '').trim();
+    if (!reason) throw CoreError('REASON_REQUIRED', 'A reason is required.'); // R6
+    var before = { status: 'approved', approvedBy: e.approvedBy, approvedAt: e.approvedAt };
+    e.status = 'returned';
+    e.returnComment = 'Reopened: ' + reason;
+    e.approvedBy = '';
+    e.approvedAt = '';
+    e.balanceOverrideReason = '';
+    audit(state, user, 'reopen', e.id, before, { status: 'returned' }, reason);
+    return e;
+  }
+
+  /* ---------- export ---------- */
+  function validateFoxMap(map) {
+    var problems = [], seen = {};
+    (map || []).forEach(function (m, i) {
+      if (!m.enabled) return;
+      var n = String(m.name || '');
+      if (!/^[A-Z][A-Z0-9_]{0,9}$/.test(n)) problems.push({ index: i, name: n, code: n.length > 10 ? 'too_long' : 'bad_name' });
+      if (seen[n]) problems.push({ index: i, name: n, code: 'duplicate' });
+      seen[n] = true;
+      if (SRC_FIELDS.indexOf(m.src) < 0) problems.push({ index: i, name: n, code: 'bad_source' });
+    });
+    return problems;
+  }
+  function srcValue(e, src, cfg, ctx, layout) {
+    var v = e[src];
+    if (src === 'createdBy' || src === 'approvedBy') return v ? ctx.userName(v) : '';
+    if (src === 'approvedAt') v = v ? localDateOf(v) : '';
+    if (DATE_SRC[src]) return layout === 'fox' ? fmtByPattern(v, cfg.dateFmt) : fmtDate(v);
+    if (NUM_SRC[src]) return round2(v);
+    if (layout === 'fox' && cfg.foxUpper && UPPER_SRC[src]) return String(v || '').toUpperCase();
+    return v === undefined || v === null ? '' : v;
+  }
+  var GENERIC_COLS = [
+    ['Entry No', 'id'], ['Doc Date', 'docDate'], ['Type', 'type'], ['Source', 'source'], ['Payee', 'payee'],
+    ['Ref No', 'refNo'], ['Description', 'description'], ['Category', 'category'], ['Net (RM)', 'netAmount'],
+    ['Tax (RM)', 'taxAmount'], ['Total (RM)', 'totalAmount'], ['Currency', 'currency'], ['Ledger', 'ledger'],
+    ['Matter No', 'matterNo'], ['Maker', 'createdBy'], ['Checker', 'approvedBy'], ['Approved On', 'approvedAt'], ['Batch', 'exportBatchId']
+  ];
+  function buildTable(entries, layout, cfg, ctx) {
+    var cols = layout === 'fox'
+      ? cfg.map.filter(function (m) { return m.enabled; }).map(function (m) { return [m.name, m.src]; })
+      : GENERIC_COLS;
+    return {
+      header: cols.map(function (c) { return c[0]; }),
+      rows: entries.map(function (e) { return cols.map(function (c) { return srcValue(e, c[1], cfg, ctx, layout); }); })
+    };
+  }
+  function csvCell(v, o) {
+    if (v === null || v === undefined) v = '';
+    if (typeof v === 'number') v = fmtNumber(v, o.decimal);
+    else {
+      v = String(v);
+      if (o.neutralise && /^[=+\-@\t\r]/.test(v)) v = "'" + v; // stop spreadsheet formula injection
+    }
+    if (v.indexOf(o.delimiter) >= 0 || /["\r\n]/.test(v)) v = '"' + v.replace(/"/g, '""') + '"';
+    return v;
+  }
+  function toDelimited(table, o) {
+    o = o || {};
+    var opt = { delimiter: o.delimiter || ',', decimal: o.decimal || '.', neutralise: !!o.neutralise };
+    var lines = [];
+    if (o.header !== false) lines.push(table.header.map(function (h) { return csvCell(String(h), { delimiter: opt.delimiter, decimal: '.', neutralise: false }); }).join(opt.delimiter));
+    table.rows.forEach(function (r) { lines.push(r.map(function (v) { return csvCell(v, opt); }).join(opt.delimiter)); });
+    return lines.join('\r\n') + '\r\n';
+  }
+  function batchEntries(state, batch) { return batch.snapshot; }
+  function createBatch(state, user, ids) {
+    needApprover(user);
+    if (!ids || !ids.length) throw CoreError('NOTHING_SELECTED', 'Select at least one entry.');
+    var bad = [], picked = [];
+    ids.forEach(function (id) {
+      var e = findEntry(state, id);
+      if (!e || e.status !== 'approved' || e.exportBatchId) bad.push(id); else picked.push(e); // R9
+    });
+    if (bad.length) throw CoreError('NOT_EXPORTABLE', 'Only approved, not-yet-exported entries can be exported.', { ids: bad });
+    state.seq.batch = (state.seq.batch || 0) + 1;
+    var bid = 'BAT-' + clockFn().getFullYear() + '-' + pad(state.seq.batch, 4);
+    var total = 0;
+    picked.forEach(function (e) {
+      e.status = 'exported';
+      e.exportBatchId = bid;
+      total += e.totalAmount;
+    });
+    var batch = { id: bid, createdAt: nowISO(), createdBy: user.id, entryIds: picked.map(function (e) { return e.id; }), count: picked.length, total: round2(total), snapshot: clone(picked) };
+    state.batches.push(batch);
+    picked.forEach(function (e) { audit(state, user, 'export', e.id, { status: 'approved' }, { status: 'exported', exportBatchId: bid }, bid); });
+    return batch;
+  }
+  function buildJSON(state, batch) {
+    return JSON.stringify({
+      batchId: batch.id, createdAt: batch.createdAt, createdBy: userName(state, batch.createdBy), currency: 'MYR',
+      count: batch.count, total: batch.total, entries: batch.snapshot
+    }, null, 2);
+  }
+
+  /* ---------- paste parser ---------- */
+  var MONTHS = { jan: 1, january: 1, feb: 2, february: 2, mar: 3, march: 3, mac: 3, apr: 4, april: 4, may: 5, mei: 5, jun: 6, june: 6, jul: 7, july: 7,
+    aug: 8, august: 8, ogos: 8, sep: 9, sept: 9, september: 9, oct: 10, october: 10, okt: 10, oktober: 10, nov: 11, november: 11,
+    dec: 12, december: 12, dis: 12, disember: 12 };
+  var NUM = '(\\d{1,3}(?:,\\d{3})+(?:\\.\\d{1,2})?|\\d+(?:\\.\\d{1,2})?)';
+  var WA_PREFIX = /^\[?\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4},?\s+\d{1,2}:\d{2}(?::\d{2})?\s*(?:[APap][Mm])?\]?\s*(?:-\s*)?[^:\n]{1,40}:\s*/gm;
+  function toNumber(s) { return round2(parseFloat(String(s).replace(/,/g, ''))); }
+  function isoFromParts(y, m, d) {
+    if (y < 100) y += 2000;
+    var iso = y + '-' + pad(m) + '-' + pad(d);
+    return parseISO(iso) ? iso : null;
+  }
+  function parseAmount(text) {
+    var kw = new RegExp('\\b(?:grand\\s+total|total\\s*(?:due|payable|amount)?|amount\\s*(?:due|payable)?|balance\\s+due|jumlah(?:\\s+bayaran)?|amaun)\\s*[:\\-]?\\s*(?:RM|MYR)?\\s*' + NUM, 'ig');
+    var rm = new RegExp('(?:RM|MYR)\\s*' + NUM, 'ig');
+    var m, last = null, cands = [];
+    while ((m = kw.exec(text))) last = toNumber(m[1]);
+    while ((m = rm.exec(text))) cands.push(toNumber(m[1]));
+    if (last !== null) return { amount: last, candidates: cands };
+    if (cands.length) return { amount: Math.max.apply(null, cands), candidates: cands };
+    return { amount: null, candidates: [] };
+  }
+  function parseDate(text) {
+    var m, re;
+    re = /\b(\d{4})-(\d{2})-(\d{2})\b/g;
+    while ((m = re.exec(text))) { var a = isoFromParts(+m[1], +m[2], +m[3]); if (a) return a; }
+    re = /\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4}|\d{2})\b/g;
+    while ((m = re.exec(text))) { var b = isoFromParts(+m[3], +m[2], +m[1]); if (b) return b; }
+    re = /\b(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z]{3,9})\.?,?\s+(\d{4})\b/g;
+    while ((m = re.exec(text))) {
+      var mo = MONTHS[m[2].toLowerCase()];
+      if (mo) { var c = isoFromParts(+m[3], mo, +m[1]); if (c) return c; }
+    }
+    return null;
+  }
+  function parseRef(text) {
+    var re = /\b(?:invoice|invois|inv|ref(?:erence)?|receipt|resit|bil|doc(?:ument)?)\s*(?:no\.?|number|num|#)?\s*[:#.\-]?\s*((?=[A-Z0-9\-\/]*\d)[A-Z0-9][A-Z0-9\-\/]{2,})/i;
+    var m = re.exec(text);
+    return m ? m[1].replace(/[-\/]+$/, '') : '';
+  }
+  function parsePayee(text) {
+    var m = /^\s*(?:payee|pay to|paid to|supplier|vendor|bill from|from|dari|kepada|penerima)\s*[:\-]\s*(.+?)\s*$/im.exec(text);
+    if (m && /^[A-Za-z]/.test(m[1])) return m[1].trim();
+    var kw = /\b(?:bill from|invoice from|invois dari|receipt from|resit dari|payment to|paid to|pay to|kepada|dari|from)\s+/ig;
+    while ((m = kw.exec(text))) {
+      var rest = text.slice(m.index + m[0].length);
+      var cut = rest.split(/\n|\s+(?:RM|MYR)\b|\s+(?:inv|invoice|ref|dated|on|for|amount|total|due)\b|[,;]|\.\s|\s+\d/i)[0].trim();
+      if (cut.length >= 3 && /^[A-Za-z]/.test(cut)) return cut;
+    }
+    var lines = text.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var l = lines[i].trim();
+      if (l.length >= 3 && l.length <= 60 && /[A-Za-z]{3}/.test(l) && !/^(?:invoice|total|date|amount|ref|rm|myr)\b/i.test(l) && !/\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4}/.test(l) && !/(?:RM|MYR)\s*\d/i.test(l)) return l;
+    }
+    return '';
+  }
+  function parsePasted(raw) {
+    var text = String(raw || '').replace(/\r/g, '').replace(WA_PREFIX, '');
+    var a = parseAmount(text), out = { amount: a.amount, candidates: a.candidates, date: parseDate(text), refNo: parseRef(text), payee: parsePayee(text), type: '', found: [] };
+    if (/\b(?:receipt|resit|received|diterima)\b/i.test(text)) out.type = 'receipt';
+    else if (/\b(?:payment|bayaran|pembayaran|paid|transfer|dibayar)\b/i.test(text)) out.type = 'payment';
+    else out.type = 'bill';
+    if (out.amount !== null) out.found.push('amount');
+    if (out.date) out.found.push('date');
+    if (out.refNo) out.found.push('refNo');
+    if (out.payee) out.found.push('payee');
+    return out;
+  }
+  /* Simulated extraction: values come from the file name only. The real OCR/AI hook replaces this. */
+  var MOCK_RULES = [
+    { k: /tnb|tenaga|electric/i, payee: 'Tenaga Nasional Berhad', category: 'Utilities', net: 487.3, tax: 0, type: 'bill', desc: 'Electricity bill' },
+    { k: /unifi|internet|broadband/i, payee: 'Unifi Business', category: 'Telecoms', net: 376.42, tax: 22.58, type: 'bill', desc: 'Internet subscription' },
+    { k: /courier|poslaju|pos[\s_-]?laju|gdex|dhl/i, payee: 'Pos Laju', category: 'Courier & postage', net: 42.3, tax: 0, type: 'payment', desc: 'Courier charges' },
+    { k: /stamp|duti/i, payee: 'Stamp Office (LHDN)', category: 'Stamp duty', net: 1250, tax: 0, type: 'payment', desc: 'Stamp duty remittance' },
+    { k: /filing|efiling|court|mahkamah/i, payee: 'Judiciary e-Filing', category: 'Court fees', net: 300, tax: 0, type: 'payment', desc: 'Court filing fee' }
+  ];
+  function simulateExtract(fileName, today) {
+    var name = String(fileName || '');
+    var hit = MOCK_RULES.filter(function (r) { return r.k.test(name); })[0];
+    if (!hit) return { matched: false, simulated: true };
+    return { matched: true, simulated: true, payee: hit.payee, category: hit.category, netAmount: hit.net, taxAmount: hit.tax, type: hit.type, description: hit.desc, docDate: today, refNo: '' };
+  }
+
+  /* ---------- payroll contributions (placeholder rates, editable) ---------- */
+  function calcPayroll(rows, r) {
+    var out = [], tot = { wage: 0, epfEr: 0, epfEe: 0, socsoEr: 0, socsoEe: 0, eisEr: 0, eisEe: 0, pcb: 0 };
+    rows.forEach(function (row) {
+      var wage = round2(row.wage), pcb = round2(row.pcb || 0);
+      var epfRate = wage <= r.epfThreshold ? r.epfEmployerLow : r.epfEmployerHigh;
+      var epfEr = round2(wage * epfRate / 100), epfEe = round2(wage * r.epfEmployee / 100);
+      if (r.epfRoundUp) { epfEr = Math.ceil(epfEr); epfEe = Math.ceil(epfEe); }
+      var sw = Math.min(wage, r.socsoCeiling), ew = Math.min(wage, r.eisCeiling);
+      var x = { name: row.name || '', wage: wage, epfEr: epfEr, epfEe: epfEe,
+        socsoEr: round2(sw * r.socsoEmployer / 100), socsoEe: round2(sw * r.socsoEmployee / 100),
+        eisEr: round2(ew * r.eisEmployer / 100), eisEe: round2(ew * r.eisEmployee / 100), pcb: pcb };
+      Object.keys(tot).forEach(function (k) { tot[k] = round2(tot[k] + x[k]); });
+      out.push(x);
+    });
+    return { rows: out, totals: tot };
+  }
+  function payrollEntryPatches(result, ym, today) {
+    var t = result.totals, label = ym;
+    function p(payee, cat, amt, desc) {
+      return { type: 'payment', source: 'other', docDate: today, payee: payee, refNo: '', description: desc + ' ' + label, category: cat, netAmount: amt, taxAmount: 0, ledger: 'office', matterNo: '' };
+    }
+    return [
+      p('KWSP (EPF)', 'Statutory contributions', round2(t.epfEr + t.epfEe), 'EPF contribution, wages'),
+      p('PERKESO (SOCSO)', 'Statutory contributions', round2(t.socsoEr + t.socsoEe), 'SOCSO contribution, wages'),
+      p('PERKESO (EIS)', 'Statutory contributions', round2(t.eisEr + t.eisEe), 'EIS contribution, wages'),
+      p('LHDN (PCB)', 'Statutory contributions', t.pcb, 'PCB remittance, wages')
+    ].filter(function (x) { return x.netAmount > 0; });
+  }
+
+  /* ---------- reminders ---------- */
+  function addReminder(state, user, r) {
+    state.seq.reminder = (state.seq.reminder || 0) + 1;
+    var rem = { id: 'REM-' + pad(state.seq.reminder, 3), kind: r.kind || 'CUSTOM', title: r.title, period: r.period || '', due: r.due, status: 'open', refNo: '', amount: 0, doneAt: '', doneBy: '' };
+    state.reminders.push(rem);
+    audit(state, user, 'reminder', '', null, { id: rem.id, title: rem.title, due: rem.due }, 'added');
+    return rem;
+  }
+  function generateStatutory(state, user, ym) {
+    var made = [];
+    ['EPF', 'SOCSO', 'EIS', 'PCB'].forEach(function (k) {
+      var exists = state.reminders.some(function (r) { return r.kind === k && r.period === ym; });
+      if (exists) return;
+      made.push(addReminder(state, user, { kind: k, title: k + ' contribution, wages ' + ym, period: ym, due: statutoryDue(ym, state.settings.dueDays[k], state.settings.rollRule) }));
+    });
+    return made;
+  }
+  function markReminderDone(state, user, id, refNo, amount) {
+    var r = state.reminders.filter(function (x) { return x.id === id; })[0];
+    if (!r) throw CoreError('NOT_FOUND', 'Reminder not found.');
+    r.status = 'done'; r.refNo = String(refNo || '').trim(); r.amount = round2(amount); r.doneAt = nowISO(); r.doneBy = user.id;
+    audit(state, user, 'reminder', '', { status: 'open' }, { id: r.id, status: 'done', refNo: r.refNo, amount: r.amount }, 'submitted: ' + r.title);
+    return r;
+  }
+
+  /* ---------- dashboard ---------- */
+  function dashboardStats(state, today) {
+    var ym = today.slice(0, 7);
+    var s = { inbox: 0, submitted: 0, overdue: 0, soon: 0, month: { office: { out: 0, inn: 0 }, client: { out: 0, inn: 0 } }, attention: [] };
+    state.entries.forEach(function (e) {
+      if (e.status === 'inbox') s.inbox++;
+      if (e.status === 'submitted') s.submitted++;
+      if ((e.status === 'approved' || e.status === 'exported') && localDateOf(e.approvedAt).slice(0, 7) === ym) {
+        var b = s.month[e.ledger] || s.month.office;
+        if (e.type === 'receipt') b.inn = round2(b.inn + e.totalAmount); else b.out = round2(b.out + e.totalAmount);
+      }
+    });
+    state.reminders.forEach(function (r) {
+      var st = reminderStatus(r, today);
+      if (st === 'overdue') { s.overdue++; s.attention.push({ kind: 'overdue', sev: 1, reminderId: r.id, title: r.title, due: r.due }); }
+      if (st === 'soon') s.soon++;
+    });
+    state.entries.forEach(function (e) {
+      if (['draft', 'returned', 'submitted'].indexOf(e.status) >= 0) {
+        var w = entryWarnings(e, state);
+        if (e.status === 'submitted' && w.balance) s.attention.push({ kind: 'balance', sev: 2, entryId: e.id, detail: w.balance });
+        if (w.duplicates.length) s.attention.push({ kind: 'duplicate', sev: 3, entryId: e.id, detail: w.duplicates });
+      }
+      if (e.status === 'returned') s.attention.push({ kind: 'returned', sev: 4, entryId: e.id, detail: e.returnComment });
+      if (e.status === 'rejected') s.attention.push({ kind: 'rejected', sev: 5, entryId: e.id, detail: e.rejectReason });
+    });
+    s.attention.sort(function (a, b) { return a.sev - b.sev; });
+    return s;
+  }
+
+  /* ---------- demo data ---------- */
+  function seedState(todayISO) {
+    var saved = clockFn;
+    var st = emptyState();
+    var T = todayISO || todayLocal();
+    var dom = parseISO(T).getUTCDate();
+    st.users = [
+      { id: 'aina', name: 'Aina', role: 'clerk' }, { id: 'daniel', name: 'Daniel', role: 'clerk' },
+      { id: 'am', name: 'Account Manager', role: 'approver' }, { id: 'partner', name: 'Partner', role: 'approver' }
+    ];
+    st.matters = [
+      { matterNo: 'M/2026/0142', clientName: 'Tan & Sons Sdn Bhd', title: 'Sale and purchase of shoplot', clientBalance: 25000 },
+      { matterNo: 'M/2026/0151', clientName: 'Borneo Timber Sdn Bhd', title: 'Tenancy agreement', clientBalance: 3500 },
+      { matterNo: 'M/2026/0163', clientName: 'Wong Mei Ling', title: 'Probate and administration', clientBalance: 12800.5 },
+      { matterNo: 'M/2025/0388', clientName: 'Kinabalu Heritage Bhd', title: 'Loan documentation', clientBalance: 850 },
+      { matterNo: 'M/2026/0170', clientName: 'Dayang Salmah', title: 'Divorce petition', clientBalance: 1200 },
+      { matterNo: 'M/2026/0177', clientName: 'Lim & Associates Sdn Bhd', title: 'Share transfer', clientBalance: 40000 }
+    ];
+    function at(daysAgo, hh, mm) {
+      var iso = addDays(T, -daysAgo);
+      clockFn = function () { return new Date(iso + 'T' + pad(hh) + ':' + pad(mm || 0) + ':00+08:00'); };
+    }
+    function U(id) { return userById(st, id); }
+    function apprDay(c) { return Math.min(c - 1, dom - 1); }
+    function mk(uid, c, patch) { at(c, 9, 10); return saveEntry(st, U(uid), patch); }
+    function sub(uid, e, c, reason) { at(c, 9, 40); return submitEntry(st, U(uid), e.id, { dupReason: reason }); }
+    function ok(uid, e, c, reason) { at(apprDay(c), 15, 20); return approveEntry(st, U(uid), e.id, { balanceReason: reason }); }
+    function dd(k) { return addDays(T, -k); }
+
+    var e1 = mk('aina', 16, { type: 'bill', source: 'email', docDate: dd(17), payee: 'Tenaga Nasional Berhad', refNo: 'TNB-2609-48812', description: 'Electricity, office floor 3', category: 'Utilities', netAmount: 842.1, taxAmount: 0, ledger: 'office' });
+    sub('aina', e1, 16); ok('am', e1, 16);
+    var e2 = mk('daniel', 15, { type: 'bill', source: 'whatsapp', docDate: dd(16), payee: 'Unifi Business', refNo: 'UB-558120', description: 'Internet subscription', category: 'Telecoms', netAmount: 376.42, taxAmount: 22.58, ledger: 'office' });
+    sub('daniel', e2, 15); ok('partner', e2, 15);
+    at(Math.max(0, apprDay(15) - 1), 17, 5);
+    createBatch(st, U('am'), [e1.id, e2.id]);
+
+    var e3 = mk('aina', 6, { type: 'payment', source: 'scan', docDate: dd(6), payee: 'Pos Laju', refNo: 'PL-2026-30112', description: 'Courier, bundle to Kuching', category: 'Courier & postage', netAmount: 86.5, taxAmount: 0, ledger: 'office' });
+    sub('aina', e3, 6); ok('am', e3, 6);
+    var e4 = mk('aina', 9, { type: 'payment', source: 'email', docDate: dd(9), payee: 'Judiciary e-Filing', refNo: 'EF-77120', description: 'Filing fee, originating summons', category: 'Court fees', netAmount: 300, taxAmount: 0, ledger: 'client', matterNo: 'M/2026/0142' });
+    sub('aina', e4, 9); ok('partner', e4, 9);
+    var e5 = mk('daniel', 2, { type: 'payment', source: 'scan', docDate: dd(2), payee: 'Stamp Office (LHDN)', refNo: 'SD-2026-9917', description: 'Stamp duty, tenancy agreement', category: 'Stamp duty', netAmount: 4500, taxAmount: 0, ledger: 'client', matterNo: 'M/2026/0151' });
+    sub('daniel', e5, 2);
+    var e6 = mk('aina', 2, { type: 'bill', source: 'upload', docDate: dd(3), payee: 'Popular Book Co', refNo: 'PBC-884201', description: 'Stationery and file covers', category: 'Stationery & printing', netAmount: 140.47, taxAmount: 8.43, ledger: 'office' });
+    sub('aina', e6, 2);
+    var e7 = mk('daniel', 3, { type: 'receipt', source: 'whatsapp', docDate: dd(3), payee: 'Dayang Salmah', refNo: 'TT-20261019', description: 'Client deposit, fund transfer', category: 'Client deposit', netAmount: 5000, taxAmount: 0, ledger: 'client', matterNo: 'M/2026/0170' });
+    sub('daniel', e7, 3);
+    var e8 = mk('aina', 12, { type: 'bill', source: 'email', docDate: dd(12), payee: 'Printing Kerani', refNo: 'PR-7781', description: 'Binding and printing, 12 sets', category: 'Stationery & printing', netAmount: 240, taxAmount: 0, ledger: 'office' });
+    sub('aina', e8, 12); ok('am', e8, 12);
+    var e9 = mk('daniel', 3, { type: 'bill', source: 'email', docDate: dd(3), payee: 'Printing Kerani', refNo: 'PR-7781', description: 'Binding and printing, 12 sets (re-issued)', category: 'Stationery & printing', netAmount: 240, taxAmount: 0, ledger: 'office' });
+    sub('daniel', e9, 3, 'Supplier re-issued the invoice after a correction; original to be credited.');
+    mk('daniel', 1, { type: 'payment', source: 'scan', docDate: dd(6), payee: 'pos laju', refNo: 'PL-2026-30113', description: 'Courier, bundle to Kuching', category: 'Courier & postage', netAmount: 86.5, taxAmount: 0, ledger: 'office' });
+    var e11 = mk('aina', 4, { type: 'payment', source: 'scan', docDate: dd(5), payee: 'Land Office', refNo: '', description: 'Search fee', category: 'Search & registration fees', netAmount: 120, taxAmount: 0, ledger: 'client', matterNo: 'M/2026/0163' });
+    sub('aina', e11, 4);
+    at(Math.max(0, apprDay(4)), 16, 10);
+    returnEntry(st, U('am'), e11.id, 'Attach the official receipt and confirm the search was for this matter.');
+    var e12 = mk('daniel', 5, { type: 'bill', source: 'whatsapp', docDate: dd(5), payee: 'Kopitiam Sentral', refNo: '', description: 'Team lunch', category: 'Other', netAmount: 54, taxAmount: 0, ledger: 'office' });
+    sub('daniel', e12, 5);
+    at(Math.max(0, apprDay(5)), 16, 30);
+    rejectEntry(st, U('partner'), e12.id, 'Personal expense, not reimbursable by the firm.');
+    mk('aina', 1, { type: 'bill', source: 'email', docDate: dd(1), payee: 'Landlord Properties Sdn Bhd', refNo: 'RENT-2610', description: 'Office rent, October', category: 'Rent', netAmount: 3800, taxAmount: 0, ledger: 'office' });
+    at(0, 9, 5);
+    addInboxItem(st, U('aina'), { source: 'whatsapp', rawText: 'Bill from Pos Laju invoice no PL-2026-33018 RM 42.30 dated 21 Oct 2026' });
+    at(0, 9, 12);
+    addInboxItem(st, U('daniel'), { source: 'email', attachments: [{ name: 'tnb_oct2026.pdf', size: 184320, type: 'application/pdf' }] });
+    at(0, 9, 20);
+    addInboxItem(st, U('aina'), { source: 'scan', attachments: [{ name: 'stamp_duty_receipt.jpg', size: 622592, type: 'image/jpeg' }] });
+
+    /* Demo reminders, dated relative to today. */
+    var prev = T.slice(0, 7);
+    var py = +prev.slice(0, 4), pm = +prev.slice(5, 7) - 1;
+    if (pm < 1) { pm = 12; py--; }
+    var per = py + '-' + pad(pm);
+    at(0, 8, 0);
+    function rem(kind, title, off, period, done) {
+      var r = addReminder(st, U('am'), { kind: kind, title: title, period: period, due: addDays(T, off) });
+      if (done) markReminderDone(st, U('am'), r.id, done.ref, done.amount);
+      return r;
+    }
+    rem('EPF', 'EPF contribution, wages ' + per, -5, per);
+    rem('SOCSO', 'SOCSO contribution, wages ' + per, 4, per);
+    rem('EIS', 'EIS contribution, wages ' + per, 19, per);
+    rem('PCB', 'PCB remittance, wages ' + per, 19, per);
+    rem('CUSTOM', 'CP204 tax estimate instalment', 33, '');
+    rem('CUSTOM', 'Annual return (SSM)', 58, '');
+    rem('EPF', 'EPF contribution, wages (two months back)', -35, '', { ref: 'KWSP-ACK-88102', amount: 4290 });
+
+    clockFn = saved;
+    return st;
+  }
+
+  /* ---------- self tests ---------- */
+  function runSelfTests(todayISO) {
+    var results = [], saved = clockFn;
+    var T = todayISO || todayLocal();
+    function t(group, name, fn) {
+      var pass = false, detail = '';
+      try { var r = fn(); pass = r === true || r === undefined; if (r !== true && r !== undefined) detail = String(r); } catch (err) { detail = 'threw ' + (err.code || err.name) + ': ' + err.message; }
+      results.push({ group: group, name: name, pass: pass, detail: detail });
+    }
+    function eq(a, b) { return JSON.stringify(a) === JSON.stringify(b) ? true : 'expected ' + JSON.stringify(b) + ' got ' + JSON.stringify(a); }
+    function throwsCode(fn, code) {
+      try { fn(); } catch (err) { return err.code === code ? true : 'expected ' + code + ' got ' + (err.code || err.message); }
+      return 'expected ' + code + ' but nothing was thrown';
+    }
+    function fresh() { return seedState(T); }
+    function byPayee(st, payee, status) { return st.entries.filter(function (e) { return e.payee === payee && (!status || e.status === status); })[0]; }
+    function baseDraft(extra) {
+      var p = { type: 'bill', docDate: T, payee: 'Test Supplier', refNo: 'T-1', description: 'x', category: 'Other', netAmount: 100, taxAmount: 6, ledger: 'office', matterNo: '' };
+      Object.keys(extra || {}).forEach(function (k) { p[k] = extra[k]; });
+      return p;
+    }
+
+    t('R1', 'Client ledger without a matter number is rejected', function () {
+      var st = fresh();
+      var e = baseDraft({ ledger: 'client', matterNo: '' });
+      return eq(validateEntry(e, st).matterNo, 'matter_required');
+    });
+    t('R1', 'Unknown matter number is rejected, known matter passes', function () {
+      var st = fresh();
+      var a = validateEntry(baseDraft({ ledger: 'client', matterNo: 'M/9999/0000' }), st).matterNo;
+      var b = validateEntry(baseDraft({ ledger: 'client', matterNo: 'M/2026/0142' }), st).matterNo;
+      return eq([a, b], ['matter_unknown', undefined]);
+    });
+    t('R1', 'Submit of a client entry without a matter throws VALIDATION', function () {
+      var st = fresh(), u = userById(st, 'aina');
+      var e = saveEntry(st, u, baseDraft({ ledger: 'client', matterNo: '' }));
+      return throwsCode(function () { submitEntry(st, u, e.id); }, 'VALIDATION');
+    });
+    t('R2', 'Total = net + tax, rounded to 2 decimals', function () {
+      var st = fresh(), u = userById(st, 'aina');
+      var e = saveEntry(st, u, baseDraft({ netAmount: 0.1, taxAmount: 0.2 }));
+      var f = saveEntry(st, u, baseDraft({ netAmount: 1234.5, taxAmount: 74.07, refNo: 'T-2' }));
+      return eq([e.totalAmount, f.totalAmount], [0.3, 1308.57]);
+    });
+    t('R2', 'Total is recomputed when net or tax is edited', function () {
+      var st = fresh(), u = userById(st, 'aina');
+      var e = saveEntry(st, u, baseDraft());
+      saveEntry(st, u, { netAmount: 200.005 }, e.id);
+      return eq([e.netAmount, e.totalAmount], [200.01, 206.01]);
+    });
+    t('R3', 'Same payee + total + date is flagged (case and spacing ignored)', function () {
+      var st = fresh();
+      var d = byPayee(st, 'pos laju', 'draft');
+      return eq(findDuplicates(d, st.entries).map(function (x) { return x.id; }), [byPayee(st, 'Pos Laju', 'approved').id]);
+    });
+    t('R3', 'Submitting a duplicate needs an override reason', function () {
+      var st = fresh(), u = userById(st, 'daniel');
+      var d = byPayee(st, 'pos laju', 'draft');
+      var first = throwsCode(function () { submitEntry(st, u, d.id); }, 'DUPLICATE');
+      if (first !== true) return first;
+      submitEntry(st, u, d.id, { dupReason: 'Second parcel, same day and same fee.' });
+      return eq([d.status, d.duplicateOverrideReason !== ''], ['submitted', true]);
+    });
+    t('R3', 'Same ref + payee is flagged even when date and amount differ', function () {
+      var st = fresh();
+      var probe = baseDraft({ payee: 'Printing Kerani', refNo: 'pr-7781', netAmount: 999, docDate: addDays(T, -40) });
+      probe.totalAmount = 999; probe.id = null;
+      return findDuplicates(probe, st.entries).length === 2 ? true : 'expected 2 matches';
+    });
+    t('R3', 'Rejected entries are not treated as duplicates', function () {
+      var st = fresh();
+      var rej = byPayee(st, 'Kopitiam Sentral', 'rejected');
+      var probe = baseDraft({ payee: 'Kopitiam Sentral', netAmount: 54, docDate: rej.docDate }); probe.totalAmount = 54; probe.id = null;
+      return eq(findDuplicates(probe, st.entries).length, 0);
+    });
+    t('R4', 'Creator cannot approve their own entry', function () {
+      var st = fresh(), am = userById(st, 'am');
+      var e = saveEntry(st, am, baseDraft());
+      submitEntry(st, am, e.id);
+      return throwsCode(function () { approveEntry(st, am, e.id); }, 'SELF_APPROVAL');
+    });
+    t('R4', 'A different approver can approve it', function () {
+      var st = fresh(), am = userById(st, 'am');
+      var e = saveEntry(st, am, baseDraft());
+      submitEntry(st, am, e.id);
+      approveEntry(st, userById(st, 'partner'), e.id);
+      return eq([e.status, e.approvedBy], ['approved', 'partner']);
+    });
+    t('R4', 'A clerk cannot approve', function () {
+      var st = fresh();
+      var e = st.entries.filter(function (x) { return x.status === 'submitted'; })[0];
+      return throwsCode(function () { approveEntry(st, userById(st, 'aina'), e.id); }, 'FORBIDDEN');
+    });
+    t('R5', 'Reject needs a reason', function () {
+      var st = fresh(), e = byPayee(st, 'Popular Book Co', 'submitted');
+      var a = throwsCode(function () { rejectEntry(st, userById(st, 'am'), e.id, '  '); }, 'REASON_REQUIRED');
+      if (a !== true) return a;
+      rejectEntry(st, userById(st, 'am'), e.id, 'Not our invoice.');
+      return eq([e.status, e.rejectReason], ['rejected', 'Not our invoice.']);
+    });
+    t('R5', 'Return needs a comment and goes back to the creator for editing', function () {
+      var st = fresh(), e = byPayee(st, 'Popular Book Co', 'submitted');
+      var a = throwsCode(function () { returnEntry(st, userById(st, 'am'), e.id, ''); }, 'REASON_REQUIRED');
+      if (a !== true) return a;
+      returnEntry(st, userById(st, 'am'), e.id, 'Add the tax breakdown.');
+      saveEntry(st, userById(st, 'aina'), { description: 'Stationery, with tax breakdown' }, e.id);
+      return eq([e.status, e.returnComment, e.createdBy], ['returned', 'Add the tax breakdown.', 'aina']);
+    });
+    t('R5', 'Another clerk cannot edit a returned entry', function () {
+      var st = fresh(), e = byPayee(st, 'Land Office', 'returned');
+      return throwsCode(function () { saveEntry(st, userById(st, 'daniel'), { description: 'hack' }, e.id); }, 'NOT_OWNER');
+    });
+    t('R6', 'Approved entries cannot be edited', function () {
+      var st = fresh(), e = byPayee(st, 'Pos Laju', 'approved');
+      return throwsCode(function () { saveEntry(st, userById(st, 'aina'), { netAmount: 1 }, e.id); }, 'IMMUTABLE');
+    });
+    t('R6', 'Reopen needs approver and a reason, then the entry is editable again', function () {
+      var st = fresh(), e = byPayee(st, 'Pos Laju', 'approved');
+      var a = throwsCode(function () { reopenEntry(st, userById(st, 'aina'), e.id, 'x'); }, 'FORBIDDEN');
+      var b = throwsCode(function () { reopenEntry(st, userById(st, 'am'), e.id, ''); }, 'REASON_REQUIRED');
+      if (a !== true) return a;
+      if (b !== true) return b;
+      reopenEntry(st, userById(st, 'am'), e.id, 'Wrong ledger');
+      saveEntry(st, userById(st, 'aina'), { description: 'fixed' }, e.id);
+      return eq([e.status, e.approvedBy], ['returned', '']);
+    });
+    t('R6', 'Exported entries cannot be reopened', function () {
+      var st = fresh(), e = byPayee(st, 'Tenaga Nasional Berhad', 'exported');
+      return throwsCode(function () { reopenEntry(st, userById(st, 'am'), e.id, 'x'); }, 'EXPORTED_LOCKED');
+    });
+    t('R7', 'Client payment above the matter balance is flagged', function () {
+      var st = fresh(), e = byPayee(st, 'Stamp Office (LHDN)', 'submitted');
+      var b = balanceBreach(e, st);
+      return eq([b.balance, b.total, b.shortBy], [3500, 4500, 1000]);
+    });
+    t('R7', 'Approval is blocked without an override reason, allowed with one', function () {
+      var st = fresh(), e = byPayee(st, 'Stamp Office (LHDN)', 'submitted'), am = userById(st, 'am');
+      var a = throwsCode(function () { approveEntry(st, am, e.id); }, 'BALANCE_OVERRIDE_REQUIRED');
+      if (a !== true) return a;
+      approveEntry(st, am, e.id, { balanceReason: 'Client topped up by cheque, banking in tomorrow.' });
+      return eq([e.status, e.balanceOverrideReason !== ''], ['approved', true]);
+    });
+    t('R7', 'Receipts and in-balance payments are not flagged', function () {
+      var st = fresh();
+      return eq([balanceBreach(byPayee(st, 'Dayang Salmah', 'submitted'), st), balanceBreach(byPayee(st, 'Judiciary e-Filing', 'approved'), st)], [null, null]);
+    });
+    t('R8', 'Every state change writes an audit event with the acting user', function () {
+      var st = fresh(), aina = userById(st, 'aina'), am = userById(st, 'am'), n0 = st.audit.length;
+      var e = saveEntry(st, aina, baseDraft({ payee: 'Audit Probe' }));
+      saveEntry(st, aina, { description: 'changed' }, e.id);
+      submitEntry(st, aina, e.id);
+      returnEntry(st, am, e.id, 'again');
+      submitEntry(st, aina, e.id);
+      approveEntry(st, am, e.id);
+      reopenEntry(st, am, e.id, 'check');
+      var ev = st.audit.slice(n0).filter(function (x) { return x.entryId === e.id; });
+      return eq(ev.map(function (x) { return x.action + ':' + x.user; }),
+        ['create:aina', 'edit:aina', 'submit:aina', 'return:am', 'submit:aina', 'approve:am', 'reopen:am']);
+    });
+    t('R8', 'Edit events carry before and after values', function () {
+      var st = fresh(), aina = userById(st, 'aina');
+      var e = saveEntry(st, aina, baseDraft({ payee: 'Diff Probe' }));
+      saveEntry(st, aina, { payee: 'Diff Probe 2' }, e.id);
+      var ev = st.audit.filter(function (x) { return x.entryId === e.id && x.action === 'edit'; })[0];
+      return eq([ev.before.payee, ev.after.payee], ['Diff Probe', 'Diff Probe 2']);
+    });
+    t('R8', 'The audit log is append-only (no delete or rewrite API, ids unique and increasing)', function () {
+      var st = fresh();
+      var ids = st.audit.map(function (x) { return x.id; });
+      var sorted = ids.slice().sort();
+      var noDelete = !Core.deleteAudit && !Core.clearAudit;
+      return noDelete && eq(ids, sorted) === true && new Set(ids).size === ids.length ? true : 'audit ids not unique/ordered or a delete API exists';
+    });
+    t('R8', 'Rejected submissions (self-approval, missing reason) write no audit event', function () {
+      var st = fresh(), n0 = st.audit.length, am = userById(st, 'am');
+      var e = saveEntry(st, am, baseDraft()); submitEntry(st, am, e.id);
+      var n1 = st.audit.length;
+      try { approveEntry(st, am, e.id); } catch (x) { /* expected */ }
+      return eq(st.audit.length, n1);
+    });
+    t('R9', 'Export accepts only approved, not-yet-exported entries', function () {
+      var st = fresh(), am = userById(st, 'am');
+      var sub = st.entries.filter(function (x) { return x.status === 'submitted'; })[0];
+      var exp = st.entries.filter(function (x) { return x.status === 'exported'; })[0];
+      var a = throwsCode(function () { createBatch(st, am, [sub.id]); }, 'NOT_EXPORTABLE');
+      var b = throwsCode(function () { createBatch(st, am, [exp.id]); }, 'NOT_EXPORTABLE');
+      var c = throwsCode(function () { createBatch(st, am, []); }, 'NOTHING_SELECTED');
+      return a === true && b === true && c === true ? true : [a, b, c].join(' | ');
+    });
+    t('R9', 'A batch stamps its id, locks the entries and cannot be created twice', function () {
+      var st = fresh(), am = userById(st, 'am');
+      var ids = st.entries.filter(function (x) { return x.status === 'approved'; }).map(function (x) { return x.id; });
+      var b = createBatch(st, am, ids);
+      var stamped = ids.every(function (id) { var e = findEntry(st, id); return e.status === 'exported' && e.exportBatchId === b.id; });
+      var again = throwsCode(function () { createBatch(st, am, ids); }, 'NOT_EXPORTABLE');
+      return stamped && again === true ? true : 'stamped=' + stamped + ' again=' + again;
+    });
+    t('R9', 'Only an approver can create a batch', function () {
+      var st = fresh();
+      var id = st.entries.filter(function (x) { return x.status === 'approved'; })[0].id;
+      return throwsCode(function () { createBatch(st, userById(st, 'aina'), [id]); }, 'FORBIDDEN');
+    });
+    t('R9', 'A past batch re-downloads the same rows', function () {
+      var st = fresh(), b = st.batches[0], ctx = ctxFor(st);
+      var x = toDelimited(buildTable(b.snapshot, 'fox', st.settings.export, ctx), { delimiter: ',' });
+      var y = toDelimited(buildTable(b.snapshot, 'fox', st.settings.export, ctx), { delimiter: ',' });
+      return x === y && b.count === 2 ? true : 'rows differ or batch count wrong';
+    });
+
+    function P(s) { return parsePasted(s); }
+    t('Parser', 'Invoice no, DD/MM/YYYY date and keyworded total', function () {
+      var r = P('TNB bill\nInvoice No: TNB-2026-8841\nDate: 12/10/2026\nTotal due RM 1,234.56');
+      return eq([r.amount, r.date, r.refNo], [1234.56, '2026-10-12', 'TNB-2026-8841']);
+    });
+    t('Parser', 'Payee after "Bill from", "12 Oct 2026" date, MYR amount, inv# ref', function () {
+      var r = P('Bill from Unifi Business dated 5 Oct 2026 amount MYR 399.00 inv# UB123456');
+      return eq([r.payee, r.date, r.amount, r.refNo], ['Unifi Business', '2026-10-05', 399, 'UB123456']);
+    });
+    t('Parser', 'Bahasa Malaysia text: kepada, DD-MM-YYYY, RM1500 with no space', function () {
+      var r = P('Resit pembayaran kepada Mahkamah Tinggi Kota Kinabalu\n12-10-2026\nRM1500');
+      return eq([r.payee, r.date, r.amount, r.type], ['Mahkamah Tinggi Kota Kinabalu', '2026-10-12', 1500, 'receipt']);
+    });
+    t('Parser', 'WhatsApp timestamp prefix is not read as the document date', function () {
+      var r = P('[22/10/26, 9:15 am] Ah Meng: Payee: Syarikat Maju\nRM 85.50 on 3 Oct 2026');
+      return eq([r.payee, r.date, r.amount], ['Syarikat Maju', '2026-10-03', 85.5]);
+    });
+    t('Parser', 'Last keyworded total wins over the subtotal', function () {
+      var r = P('Subtotal RM 100.00\nSST RM 6.00\nTotal RM 106.00');
+      return eq(r.amount, 106);
+    });
+    t('Parser', 'Impossible dates and text with nothing useful return empty fields', function () {
+      var r = P('hello, 31/02/2026 see you');
+      return eq([r.amount, r.date, r.refNo], [null, null, '']);
+    });
+    t('Parser', 'Simulated extractor matches file-name keywords and is flagged as simulated', function () {
+      var a = simulateExtract('IMG_tnb_oct.pdf', T), b = simulateExtract('random.pdf', T);
+      return eq([a.matched, a.simulated, a.payee, b.matched], [true, true, 'Tenaga Nasional Berhad', false]);
+    });
+
+    t('FoxPro', 'Default layout has the 15 agreed fields, uppercase, 10 characters or fewer', function () {
+      var m = defaultFoxMap();
+      return eq(m.map(function (x) { return x.name; }), ['DOCNO', 'DOCDATE', 'DOCTYPE', 'PAYEE', 'REFNO', 'DESCRIP', 'NETAMT', 'TAXAMT', 'TOTAMT', 'LEDGER', 'MATTERNO', 'CATEGORY', 'MAKER', 'CHECKER', 'APPRDATE'])
+        === true && m.every(function (x) { return x.name.length <= 10 && x.name === x.name.toUpperCase(); }) && validateFoxMap(m).length === 0 ? true : 'default map invalid';
+    });
+    t('FoxPro', 'Validator flags names over 10 characters, lowercase, duplicates and unknown sources', function () {
+      var p = validateFoxMap([
+        { name: 'CLIENTMATTER', src: 'matterNo', enabled: true }, { name: 'payee', src: 'payee', enabled: true },
+        { name: 'REFNO', src: 'refNo', enabled: true }, { name: 'REFNO', src: 'refNo', enabled: true },
+        { name: 'ZZ', src: 'nope', enabled: true }, { name: 'SKIPPED_NAME_TOO_LONG', src: 'id', enabled: false }]);
+      return eq(p.map(function (x) { return x.code; }), ['too_long', 'bad_name', 'duplicate', 'bad_source']);
+    });
+    t('FoxPro', 'Export formats dates, decimals and delimiter from settings', function () {
+      var st = fresh(), cfg = clone(st.settings.export);
+      cfg.dateFmt = 'DD/MM/YYYY'; cfg.decimal = ','; cfg.delimiter = ';';
+      var tbl = buildTable([st.batches[0].snapshot[0]], 'fox', cfg, ctxFor(st));
+      var csv = toDelimited(tbl, { delimiter: ';', decimal: ',', header: true });
+      var line = csv.split('\r\n')[1];
+      return /;\d{2}\/\d{2}\/\d{4};BILL;/.test(line) && /;842,10;/.test(line) ? true : line;
+    });
+    t('FoxPro', 'Header row can be switched off', function () {
+      var st = fresh();
+      var tbl = buildTable(st.batches[0].snapshot, 'fox', st.settings.export, ctxFor(st));
+      return eq(toDelimited(tbl, { header: false }).split('\r\n').length, 3);
+    });
+    t('Export', 'Generic CSV neutralises spreadsheet formulas and quotes delimiters', function () {
+      var tbl = { header: ['A', 'B'], rows: [['=HYPERLINK("x")', 'a,b'], ['-5 cash', 12.5]] };
+      var csv = toDelimited(tbl, { neutralise: true });
+      return eq(csv.split('\r\n').slice(1, 3), ["\"'=HYPERLINK(\"\"x\"\")\",\"a,b\"", "'-5 cash,12.50"]);
+    });
+    t('Export', 'JSON payload carries the batch id and every entry', function () {
+      var st = fresh(), o = JSON.parse(buildJSON(st, st.batches[0]));
+      return eq([o.batchId, o.entries.length], [st.batches[0].id, 2]);
+    });
+
+    t('Compliance', 'Statutory due date: 15th of next month, weekend roll next/prev/none', function () {
+      return eq([statutoryDue('2026-10', 15, 'next'), statutoryDue('2026-10', 15, 'prev'), statutoryDue('2026-10', 15, 'none')], ['2026-11-16', '2026-11-13', '2026-11-15']);
+    });
+    t('Compliance', 'Due day is clamped to the month length (31st in February)', function () {
+      return eq(statutoryDue('2026-01', 31, 'none'), '2026-02-28');
+    });
+    t('Compliance', 'Reminder status boundaries: overdue, due today, 7 days, 8 days, done', function () {
+      var mk2 = function (off, st2) { return { due: addDays('2026-10-22', off), status: st2 || 'open' }; };
+      return eq([-1, 0, 7, 8].map(function (o) { return reminderStatus(mk2(o), '2026-10-22'); }).concat(reminderStatus(mk2(-9, 'done'), '2026-10-22')),
+        ['overdue', 'soon', 'soon', 'upcoming', 'done']);
+    });
+    t('Compliance', 'Generating statutory reminders does not duplicate an existing period', function () {
+      var st = fresh(), am = userById(st, 'am');
+      var a = generateStatutory(st, am, '2031-03').length, b = generateStatutory(st, am, '2031-03').length;
+      return eq([a, b], [4, 0]);
+    });
+    t('Compliance', 'Payroll: EPF at 13% up to the threshold, 12% above, rounded up to the ringgit', function () {
+      var r = calcPayroll([{ wage: 3000 }, { wage: 6000 }, { wage: 3333.33 }], defaultSettings().rates).rows;
+      return eq([r[0].epfEr, r[0].epfEe, r[1].epfEr, r[1].epfEe, r[2].epfEr, r[2].epfEe], [390, 330, 720, 660, 434, 367]);
+    });
+    t('Compliance', 'Payroll: SOCSO and EIS apply to wages up to the ceiling only', function () {
+      var r = calcPayroll([{ wage: 7000, pcb: 120 }], defaultSettings().rates);
+      var x = r.rows[0];
+      return eq([x.socsoEr, x.socsoEe, x.eisEr, x.eisEe, r.totals.pcb], [105, 30, 12, 12, 120]);
+    });
+    t('Compliance', 'Payroll entry patches skip zero amounts', function () {
+      var r = calcPayroll([{ wage: 3000 }], defaultSettings().rates);
+      return eq(payrollEntryPatches(r, '2026-10', T).map(function (p) { return p.payee; }), ['KWSP (EPF)', 'PERKESO (SOCSO)', 'PERKESO (EIS)']);
+    });
+
+    t('Seed', 'About 16 entries covering all seven statuses', function () {
+      var st = fresh(), seen = {};
+      st.entries.forEach(function (e) { seen[e.status] = 1; });
+      return st.entries.length >= 15 && STATUSES.every(function (s) { return seen[s]; }) ? true : 'count ' + st.entries.length + ', statuses ' + Object.keys(seen).join(',');
+    });
+    t('Seed', 'Two duplicate pairs and one client payment over its balance', function () {
+      var st = fresh();
+      var dupEntries = st.entries.filter(function (e) { return ['draft', 'submitted', 'returned'].indexOf(e.status) >= 0 && findDuplicates(e, st.entries).length; });
+      var breaches = st.entries.filter(function (e) { return e.status === 'submitted' && balanceBreach(e, st); });
+      return eq([dupEntries.length, breaches.length], [2, 1]);
+    });
+    t('Seed', 'Reminders: one overdue, one due within 7 days, the rest upcoming or done', function () {
+      var st = fresh(), c = { overdue: 0, soon: 0, upcoming: 0, done: 0 };
+      st.reminders.forEach(function (r) { c[reminderStatus(r, T)]++; });
+      return eq([c.overdue, c.soon, c.upcoming >= 3, c.done >= 1], [1, 1, true, true]);
+    });
+    t('Seed', 'Dashboard counts match the data', function () {
+      var st = fresh(), s = dashboardStats(st, T);
+      return eq([s.inbox, s.submitted, s.overdue, s.soon], [3, 4, 1, 1]);
+    });
+
+    clockFn = saved;
+    return results;
+  }
+
+  return {
+    TYPES: TYPES, LEDGERS: LEDGERS, SOURCES: SOURCES, STATUSES: STATUSES, CATEGORIES: CATEGORIES, SRC_FIELDS: SRC_FIELDS,
+    setClock: setClock, nowISO: nowISO, todayLocal: todayLocal, localDateOf: localDateOf,
+    round2: round2, clone: clone, fmtMoney: fmtMoney, fmtNumber: fmtNumber, fmtDate: fmtDate, fmtByPattern: fmtByPattern,
+    parseISO: parseISO, addDays: addDays, diffDays: diffDays, rollDue: rollDue, statutoryDue: statutoryDue, reminderStatus: reminderStatus,
+    defaultSettings: defaultSettings, defaultFoxMap: defaultFoxMap, emptyState: emptyState, seedState: seedState,
+    userById: userById, userName: userName, isApprover: isApprover, findEntry: findEntry, findMatter: findMatter, ctxFor: ctxFor,
+    blankEntry: blankEntry, validateEntry: validateEntry, findDuplicates: findDuplicates, balanceBreach: balanceBreach, entryWarnings: entryWarnings,
+    computeTotal: computeTotal, saveEntry: saveEntry, addInboxItem: addInboxItem, cloneAsDraft: cloneAsDraft,
+    submitEntry: submitEntry, approveEntry: approveEntry, rejectEntry: rejectEntry, returnEntry: returnEntry, reopenEntry: reopenEntry,
+    validateFoxMap: validateFoxMap, buildTable: buildTable, toDelimited: toDelimited, createBatch: createBatch, buildJSON: buildJSON,
+    parsePasted: parsePasted, simulateExtract: simulateExtract, calcPayroll: calcPayroll, payrollEntryPatches: payrollEntryPatches,
+    addReminder: addReminder, generateStatutory: generateStatutory, markReminderDone: markReminderDone, dashboardStats: dashboardStats,
+    audit: audit, runSelfTests: runSelfTests
+  };
+})();
+
+
+var I18N = {
+  en: {
+    'app.name': 'Accounts Intake Hub', 'app.sub': 'Bills, payments and receipts for the firm accounts team',
+    'who': 'Working as', 'role.clerk': 'Clerk', 'role.approver': 'Approver', 'lang.btn': 'Bahasa Malaysia',
+    'nav.dashboard': 'Dashboard', 'nav.inbox': 'Inbox', 'nav.entry': 'Entry', 'nav.approvals': 'Approvals', 'nav.compliance': 'Compliance',
+    'nav.export': 'Export', 'nav.audit': 'Audit log', 'nav.setup': 'Settings', 'nav.more': 'More',
+    'st.inbox': 'Inbox', 'st.draft': 'Draft', 'st.submitted': 'Submitted', 'st.approved': 'Approved', 'st.returned': 'Returned',
+    'st.rejected': 'Rejected', 'st.exported': 'Exported', 'st.overdue': 'Overdue', 'st.soon': 'Due soon', 'st.upcoming': 'Upcoming', 'st.done': 'Done',
+    'type.bill': 'Bill', 'type.payment': 'Payment', 'type.receipt': 'Receipt',
+    'ledger.office': 'Office', 'ledger.client': 'Client',
+    'src.whatsapp': 'WhatsApp', 'src.email': 'Email', 'src.scan': 'Scan', 'src.upload': 'Upload', 'src.other': 'Other',
+    'f.type': 'Type', 'f.source': 'Source', 'f.docDate': 'Document date', 'f.payee': 'Payee / payer', 'f.refNo': 'Reference no.',
+    'f.description': 'Description', 'f.category': 'Category', 'f.net': 'Net amount (RM)', 'f.tax': 'Tax (RM)', 'f.total': 'Total',
+    'f.ledger': 'Ledger', 'f.matter': 'Matter no.', 'f.attachments': 'Attachments', 'f.none': 'None',
+    'btn.saveDraft': 'Save draft', 'btn.submit': 'Submit for approval', 'btn.new': 'New entry', 'btn.open': 'Open', 'btn.close': 'Close',
+    'btn.approve': 'Approve', 'btn.reject': 'Reject', 'btn.return': 'Return to clerk', 'btn.reopen': 'Reopen', 'btn.edit': 'Edit in entry form',
+    'btn.extract': 'Extract from document (simulated)', 'btn.addInbox': 'Add to inbox', 'btn.remove': 'Remove', 'btn.copy': 'Copy',
+    'btn.createBatch': 'Create export batch', 'btn.runTests': 'Run self-tests', 'btn.reset': 'Reset demo data', 'btn.confirmReset': 'Yes, reset everything',
+    'btn.cancel': 'Cancel', 'btn.add': 'Add', 'btn.markDone': 'Mark submitted', 'btn.createPay': 'Create payment entry', 'btn.save': 'Save',
+    'btn.generate': 'Generate statutory reminders', 'btn.payEntries': 'Create payment entries', 'btn.up': 'Up', 'btn.down': 'Down',
+    'dash.title': 'Overview', 'dash.asAt': 'As at {date}', 'dash.inbox': 'Inbox', 'dash.inboxSub': 'documents to enter', 'dash.await': 'Awaiting approval',
+    'dash.awaitSub': 'submitted entries', 'dash.overdue': 'Overdue deadlines', 'dash.overdueSub': 'statutory and custom', 'dash.soon': 'Due in 7 days',
+    'dash.soonSub': 'deadlines', 'dash.office': 'Office ledger', 'dash.client': 'Client ledger', 'dash.monthOut': 'Out', 'dash.monthIn': 'In',
+    'dash.month': 'approved this month', 'dash.attention': 'Needs attention', 'dash.clear': 'Nothing needs attention right now.', 'dash.recent': 'Recent activity',
+    'dash.demo': 'This is a demo. User roles and the approval step run in your browser and are not real access control. Data stays in this browser.',
+    'att.overdue': '{title} was due {due}.', 'att.balance': '{id}: payment of {amt} for {matter} is {short} above the client balance.',
+    'att.duplicate': '{id} may duplicate {ids}.', 'att.returned': '{id} was returned: {detail}', 'att.rejected': '{id} was rejected: {detail}',
+    'inbox.title': 'Inbox', 'inbox.drop': 'Drop bills, receipts or screenshots here', 'inbox.dropSub': 'PDF, JPG or PNG. One inbox item per file. Click to choose files.',
+    'inbox.source': 'Source of these files', 'inbox.paste': 'Paste a WhatsApp or email message', 'inbox.pastePh': 'Bill from Unifi Business dated 5 Oct 2026\nInvoice no UB-558120\nTotal RM 399.00',
+    'inbox.parsed': 'Found in the text', 'inbox.nothing': 'Nothing recognised yet. Amount, date, reference and payee are picked up when present.',
+    'inbox.queue': 'Waiting to be entered', 'inbox.empty': 'The inbox is empty.', 'inbox.stub': 'Files are not uploaded anywhere in this demo. Only the file name, size and type are kept, and previews last until you reload.',
+    'inbox.simNote': 'Extraction is simulated from the file name (try names with tnb, unifi, courier, stamp or filing).', 'inbox.noMatch': 'No keyword in the file name. Fill the form manually.',
+    'inbox.sim': 'Pre-filled by the simulated extractor. Check every field.', 'inbox.fromText': 'Pre-filled from the pasted text. Check every field.',
+    'entry.title': 'Entry', 'entry.new': 'New entry', 'entry.edit': 'Editing {id}', 'entry.mine': 'My drafts and returned items', 'entry.mineEmpty': 'No drafts waiting.',
+    'entry.returned': 'Returned by the approver', 'entry.raw': 'Original message', 'entry.dupTitle': 'Possible duplicate', 'entry.dupTick': 'Submit anyway', 'entry.dupReason': 'Reason for submitting anyway',
+    'entry.balTitle': 'Over the client balance', 'entry.balText': 'This payment is {short} above the balance of {bal} for {matter}. The approver must give a reason to approve it.',
+    'entry.matterInfo': '{name}. Balance {bal} as at last reconciliation.', 'entry.pickMatter': 'Choose a matter', 'entry.saved': 'Draft saved as {id}.', 'entry.submitted': '{id} submitted for approval.',
+    'entry.attachNote': 'Previews last until you reload. The file itself is not stored in this demo.', 'entry.addFiles': 'Add files', 'entry.noPreview': 'No preview after reload',
+    'entry.office': 'Office account', 'entry.clientAcc': 'Client account',
+    'ap.title': 'Approvals', 'ap.pending': 'Waiting for approval', 'ap.approved': 'Approved, not exported', 'ap.all': 'All entries', 'ap.empty': 'Nothing here.',
+    'ap.clerkNote': 'You are signed in as a clerk, so these entries are read only. Switch to an approver to approve, reject or return them.',
+    'ap.own': 'You created this entry, so another approver must approve it.', 'ap.reasonReject': 'Reason for rejecting', 'ap.reasonReturn': 'Comment for the clerk',
+    'ap.reasonReopen': 'Reason for reopening', 'ap.balReason': 'Reason for approving above the client balance', 'ap.history': 'History',
+    'ap.approved.ok': '{id} approved.', 'ap.rejected.ok': '{id} rejected.', 'ap.returned.ok': '{id} returned to {name}.', 'ap.reopened.ok': '{id} reopened for editing.',
+    'ap.details': 'Details', 'ap.warnings': 'Warnings', 'ap.reject': 'Reject', 'ap.return': 'Return', 'ap.dupOverride': 'Submitted despite a duplicate warning: {reason}',
+    'kv.status': 'Status', 'kv.by': 'Entered by', 'kv.created': 'Entered', 'kv.approvedBy': 'Approved by', 'kv.approvedAt': 'Approved', 'kv.batch': 'Export batch',
+    'kv.rejectReason': 'Rejection reason', 'kv.returnComment': 'Return comment', 'kv.balOverride': 'Balance override',
+    'co.title': 'Compliance', 'co.open': 'Open', 'co.done': 'Done', 'co.all': 'All', 'co.demo': 'Demo dates are set relative to today. Use the generator below to create statutory dates from your due-day rules.',
+    'co.empty': 'No reminders here.', 'co.dueOn': 'Due {date}', 'co.overdueBy': '{n} days overdue', 'co.today': 'Due today', 'co.inDays': 'in {n} days', 'co.oneDay': 'in 1 day', 'co.oneOver': '1 day overdue',
+    'co.refAmt': 'Submitted with ref {ref}, {amt}', 'co.refNo': 'Reference no.', 'co.amount': 'Amount (RM)', 'co.addTitle': 'Add a reminder', 'co.custom': 'Reminder title', 'co.date': 'Due date',
+    'co.templates': 'Templates (set the date yourself)', 'co.tpl.formc': 'Form C (company tax return)', 'co.tpl.cp204': 'CP204 (tax estimate instalment)', 'co.tpl.stamp': 'Stamp duty remittance', 'co.tpl.ssm': 'Annual return (SSM)',
+    'co.gen': 'Statutory reminders for a wage month', 'co.genNote': 'EPF, SOCSO, EIS and PCB fall due on the configured day of the following month. Weekend roll and due days are in Settings. Public holidays are not checked.',
+    'co.genDone': 'Created {n} reminders for {period}.', 'co.genNone': 'Reminders for {period} already exist.', 'co.wage': 'Wage month',
+    'co.payroll': 'Contribution calculator', 'co.payNote': 'Rates and wage ceilings come from Settings and are placeholders. Verify against the current official schedules before paying anything. SOCSO uses wage-band tables in practice, so these figures can differ by a few sen.',
+    'co.name': 'Employee', 'co.grossWage': 'Gross wage (RM)', 'co.pcb': 'PCB (RM)', 'co.addRow': 'Add employee', 'co.epfEr': 'EPF employer', 'co.epfEe': 'EPF employee', 'co.socso': 'SOCSO (er + ee)', 'co.eis': 'EIS (er + ee)', 'co.totals': 'Totals',
+    'co.paid': 'Created {n} draft payment entries. Find them under Entry, My drafts.', 'co.added': 'Reminder added.', 'co.marked': 'Marked as submitted.',
+    'ex.title': 'Export', 'ex.ready': 'Approved and ready to export', 'ex.none': 'No approved entries are waiting for export.', 'ex.selectAll': 'Select all', 'ex.selected': '{n} selected, {total}',
+    'ex.preview': 'Layout preview', 'ex.fox': 'FoxPro layout', 'ex.generic': 'Generic', 'ex.batches': 'Export batches', 'ex.noBatches': 'No batches yet.', 'ex.batchMade': 'Batch {id} created. Download it below.',
+    'ex.approverOnly': 'Only an approver can create an export batch.', 'ex.fixLayout': 'The FoxPro layout has invalid field names. Fix it in Settings before downloading the FoxPro file.',
+    'ex.entries': '{n} entries', 'ex.dl.xlsx': 'Excel (.xlsx)', 'ex.dl.csv': 'CSV (generic)', 'ex.dl.fox': 'FoxPro CSV', 'ex.dl.json': 'JSON (API payload)',
+    'ex.xlsxMissing': 'The Excel library could not load, so a CSV was saved instead.', 'ex.saved': 'Saved {name}.', 'ex.cancelled': 'Download cancelled.', 'ex.busy': 'Another save prompt is open. Try again in a moment.',
+    'ex.unavailable': 'Downloads are not available in this view. Copy the text below instead.', 'ex.copied': 'Copied.', 'ex.copyFail': 'Copy was blocked. Select the text and copy it yourself.',
+    'ex.layoutNote': 'The FoxPro file uses the current layout in Settings, applied to the batch as it was approved. Check it against your DBF structure before importing.',
+    'au.title': 'Audit log', 'au.time': 'Time', 'au.user': 'User', 'au.action': 'Action', 'au.entry': 'Entry', 'au.detail': 'Detail', 'au.all': 'All', 'au.search': 'Search entry no. or note',
+    'au.showing': 'Showing {n} of {m} events', 'au.csv': 'Download CSV', 'au.empty': 'No events match.',
+    'act.create': 'Created', 'act.edit': 'Edited', 'act.submit': 'Submitted', 'act.approve': 'Approved', 'act.reject': 'Rejected', 'act.return': 'Returned', 'act.reopen': 'Reopened',
+    'act.export': 'Exported', 'act.settings': 'Settings', 'act.reminder': 'Reminder',
+    'se.title': 'Settings and tests', 'se.lang': 'Language', 'se.users': 'Team', 'se.addUser': 'Add team member', 'se.userName': 'Name', 'se.userRole': 'Role',
+    'se.dues': 'Statutory due days', 'se.roll': 'When the due day is a weekend', 'se.roll.none': 'Keep the date', 'se.roll.next': 'Move to the next Monday', 'se.roll.prev': 'Move back to Friday',
+    'se.dueDay': 'Due day of the following month', 'se.rates': 'Contribution rates and ceilings', 'se.verify': 'Placeholder values. Verify against the current official schedules.',
+    'se.epfLow': 'EPF employer % (wage up to threshold)', 'se.epfHigh': 'EPF employer % (above threshold)', 'se.epfThr': 'EPF wage threshold (RM)', 'se.epfEe': 'EPF employee %', 'se.epfRound': 'Round EPF up to the next ringgit',
+    'se.socsoEr': 'SOCSO employer %', 'se.socsoEe': 'SOCSO employee %', 'se.socsoCap': 'SOCSO wage ceiling (RM)', 'se.eisEr': 'EIS employer %', 'se.eisEe': 'EIS employee %', 'se.eisCap': 'EIS wage ceiling (RM)',
+    'se.export': 'Export layout', 'se.dateFmt': 'Date format', 'se.delim': 'Delimiter', 'se.decimal': 'Decimal mark', 'se.header': 'Include a header row', 'se.bom': 'Add a BOM to the FoxPro file', 'se.upper': 'Upper-case type and ledger codes',
+    'se.delim.comma': 'Comma', 'se.delim.semicolon': 'Semicolon', 'se.delim.tab': 'Tab', 'se.delim.pipe': 'Pipe', 'se.dec.dot': 'Dot (1234.56)', 'se.dec.comma': 'Comma (1234,56)',
+    'se.map': 'FoxPro field mapping', 'se.mapNote': 'Order matters for a positional import. Field names must be upper case, start with a letter and have 10 characters or fewer.', 'se.mapOn': 'On', 'se.mapName': 'Field name', 'se.mapSrc': 'Source',
+    'se.mapAdd': 'Add field', 'se.mapReset': 'Reset to default', 'se.mapOk': 'The layout is valid.', 'se.p.too_long': 'longer than 10 characters', 'se.p.bad_name': 'must be upper case, start with a letter, letters, digits and underscore only',
+    'se.p.duplicate': 'used twice', 'se.p.bad_source': 'unknown source field',
+    'se.data': 'Demo data', 'se.dataNote': 'Resets entries, reminders, the audit log and settings to the sample set. Language and the selected user stay.', 'se.reset.ok': 'Demo data restored.',
+    'se.storage': 'Storage', 'se.storage.ok': 'Saved in this browser.', 'se.storage.mem': 'Browser storage is blocked here, so changes last only until you close or reload this page.',
+    'se.tests': 'Self-tests', 'se.testsNote': 'Runs every rule (R1 to R9), the paste parser, the export layouts and the compliance maths on a fresh copy of the demo data. Your data is not touched.',
+    'se.testsSummary': '{pass} of {total} passed', 'se.manual': 'Manual test script', 'se.changed': 'Setting saved.',
+    'man.1': 'Switch to Aina (Clerk). In Inbox, paste a message with an amount and a date, then add it to the inbox.', 'man.2': 'Open it, complete the form, choose the client ledger without a matter and try to submit. The matter number is required.',
+    'man.3': 'Pick a matter, submit, then switch to the Account Manager and open Approvals.', 'man.4': 'Create an entry as the Account Manager, submit it and try to approve it. You are blocked. Switch to Partner and approve.',
+    'man.5': 'Open the payment to Stamp Office. It is above the client balance, so approving needs a reason.', 'man.6': 'In Export, create a batch from the approved entries, download the FoxPro CSV and check it against your DBF layout.',
+    'man.7': 'Open the Audit log and confirm every step above appears with the right user.',
+    'ce.IMMUTABLE': 'Approved entries are locked. An approver can reopen the entry with a reason.', 'ce.LOCKED_SUBMITTED': 'This entry is waiting for approval and cannot be edited.', 'ce.LOCKED_REJECTED': 'Rejected entries cannot be edited. Copy it to a new draft instead.',
+    'ce.NOT_OWNER': 'Only the person who created this entry can change it.', 'ce.BAD_STATE': 'This action is not available in the entry\'s current status.', 'ce.VALIDATION': 'Some fields need attention.',
+    'ce.DUPLICATE': 'This looks like a duplicate. Tick "Submit anyway" and give a reason to continue.', 'ce.FORBIDDEN': 'Only an approver can do this.', 'ce.SELF_APPROVAL': 'You created this entry, so you cannot approve it. Another approver must.',
+    'ce.BALANCE_OVERRIDE_REQUIRED': 'This payment is above the client balance. Enter a reason to approve it anyway.', 'ce.REASON_REQUIRED': 'A reason is required.', 'ce.EXPORTED_LOCKED': 'This entry is in an export batch and cannot be reopened.',
+    'ce.NOT_EXPORTABLE': 'Only approved entries that are not in a batch can be exported.', 'ce.NOTHING_SELECTED': 'Select at least one entry.', 'ce.NOT_FOUND': 'That record no longer exists.',
+    'err.required': 'Required', 'err.invalid_date': 'Enter a valid date', 'err.amount_positive': 'Enter an amount above zero', 'err.matter_required': 'A matter number is required for the client ledger',
+    'err.matter_unknown': 'This matter number is not in the list', 'err.invalid_amount': 'Enter a valid amount', 'err.invalid': 'Not valid'
+  },
+  ms: {
+    'app.name': 'Pusat Kemasukan Akaun', 'app.sub': 'Bil, bayaran dan resit untuk pasukan akaun firma',
+    'who': 'Log masuk sebagai', 'role.clerk': 'Kerani', 'role.approver': 'Pelulus', 'lang.btn': 'English',
+    'nav.dashboard': 'Papan pemuka', 'nav.inbox': 'Peti masuk', 'nav.entry': 'Kemasukan', 'nav.approvals': 'Kelulusan', 'nav.compliance': 'Pematuhan',
+    'nav.export': 'Eksport', 'nav.audit': 'Log audit', 'nav.setup': 'Tetapan', 'nav.more': 'Lagi',
+    'st.inbox': 'Peti masuk', 'st.draft': 'Draf', 'st.submitted': 'Dihantar', 'st.approved': 'Diluluskan', 'st.returned': 'Dikembalikan',
+    'st.rejected': 'Ditolak', 'st.exported': 'Dieksport', 'st.overdue': 'Lewat', 'st.soon': 'Hampir tamat', 'st.upcoming': 'Akan datang', 'st.done': 'Selesai',
+    'type.bill': 'Bil', 'type.payment': 'Bayaran', 'type.receipt': 'Resit',
+    'ledger.office': 'Pejabat', 'ledger.client': 'Klien',
+    'src.whatsapp': 'WhatsApp', 'src.email': 'E-mel', 'src.scan': 'Imbasan', 'src.upload': 'Muat naik', 'src.other': 'Lain-lain',
+    'f.type': 'Jenis', 'f.source': 'Sumber', 'f.docDate': 'Tarikh dokumen', 'f.payee': 'Penerima / pembayar', 'f.refNo': 'No. rujukan',
+    'f.description': 'Keterangan', 'f.category': 'Kategori', 'f.net': 'Amaun bersih (RM)', 'f.tax': 'Cukai (RM)', 'f.total': 'Jumlah',
+    'f.ledger': 'Lejar', 'f.matter': 'No. fail', 'f.attachments': 'Lampiran', 'f.none': 'Tiada',
+    'btn.saveDraft': 'Simpan draf', 'btn.submit': 'Hantar untuk kelulusan', 'btn.new': 'Kemasukan baharu', 'btn.open': 'Buka', 'btn.close': 'Tutup',
+    'btn.approve': 'Lulus', 'btn.reject': 'Tolak', 'btn.return': 'Kembalikan kepada kerani', 'btn.reopen': 'Buka semula', 'btn.edit': 'Sunting dalam borang',
+    'btn.extract': 'Ekstrak daripada dokumen (simulasi)', 'btn.addInbox': 'Tambah ke peti masuk', 'btn.remove': 'Buang', 'btn.copy': 'Salin',
+    'btn.createBatch': 'Cipta kelompok eksport', 'btn.runTests': 'Jalankan ujian kendiri', 'btn.reset': 'Set semula data demo', 'btn.confirmReset': 'Ya, set semula semua',
+    'btn.cancel': 'Batal', 'btn.add': 'Tambah', 'btn.markDone': 'Tanda sudah dihantar', 'btn.createPay': 'Cipta kemasukan bayaran', 'btn.save': 'Simpan',
+    'btn.generate': 'Jana peringatan berkanun', 'btn.payEntries': 'Cipta kemasukan bayaran', 'btn.up': 'Naik', 'btn.down': 'Turun',
+    'dash.title': 'Gambaran keseluruhan', 'dash.asAt': 'Setakat {date}', 'dash.inbox': 'Peti masuk', 'dash.inboxSub': 'dokumen untuk dimasukkan', 'dash.await': 'Menunggu kelulusan',
+    'dash.awaitSub': 'kemasukan dihantar', 'dash.overdue': 'Tarikh akhir lewat', 'dash.overdueSub': 'berkanun dan tersuai', 'dash.soon': 'Tamat dalam 7 hari',
+    'dash.soonSub': 'tarikh akhir', 'dash.office': 'Lejar pejabat', 'dash.client': 'Lejar klien', 'dash.monthOut': 'Keluar', 'dash.monthIn': 'Masuk',
+    'dash.month': 'diluluskan bulan ini', 'dash.attention': 'Perlu perhatian', 'dash.clear': 'Tiada apa-apa yang perlu perhatian sekarang.', 'dash.recent': 'Aktiviti terkini',
+    'dash.demo': 'Ini versi demo. Peranan pengguna dan langkah kelulusan berjalan dalam pelayar anda dan bukan kawalan akses sebenar. Data kekal dalam pelayar ini.',
+    'att.overdue': '{title} sepatutnya dibayar pada {due}.', 'att.balance': '{id}: bayaran {amt} untuk {matter} melebihi baki klien sebanyak {short}.',
+    'att.duplicate': '{id} mungkin pendua kepada {ids}.', 'att.returned': '{id} dikembalikan: {detail}', 'att.rejected': '{id} ditolak: {detail}',
+    'inbox.title': 'Peti masuk', 'inbox.drop': 'Letakkan bil, resit atau tangkapan skrin di sini', 'inbox.dropSub': 'PDF, JPG atau PNG. Satu item peti masuk bagi setiap fail. Klik untuk pilih fail.',
+    'inbox.source': 'Sumber fail ini', 'inbox.paste': 'Tampal mesej WhatsApp atau e-mel', 'inbox.pastePh': 'Bil daripada Unifi Business bertarikh 5 Okt 2026\nInvois no UB-558120\nJumlah RM 399.00',
+    'inbox.parsed': 'Ditemui dalam teks', 'inbox.nothing': 'Belum ada yang dikenali. Amaun, tarikh, rujukan dan penerima akan diambil jika ada.',
+    'inbox.queue': 'Menunggu untuk dimasukkan', 'inbox.empty': 'Peti masuk kosong.', 'inbox.stub': 'Fail tidak dimuat naik ke mana-mana dalam demo ini. Hanya nama, saiz dan jenis fail disimpan, dan pratonton hilang selepas muat semula.',
+    'inbox.simNote': 'Pengekstrakan ini simulasi daripada nama fail (cuba nama yang ada tnb, unifi, courier, stamp atau filing).', 'inbox.noMatch': 'Tiada kata kunci dalam nama fail. Isi borang secara manual.',
+    'inbox.sim': 'Diisi oleh pengekstrak simulasi. Semak setiap medan.', 'inbox.fromText': 'Diisi daripada teks yang ditampal. Semak setiap medan.',
+    'entry.title': 'Kemasukan', 'entry.new': 'Kemasukan baharu', 'entry.edit': 'Menyunting {id}', 'entry.mine': 'Draf dan item dikembalikan saya', 'entry.mineEmpty': 'Tiada draf menunggu.',
+    'entry.returned': 'Dikembalikan oleh pelulus', 'entry.raw': 'Mesej asal', 'entry.dupTitle': 'Kemungkinan pendua', 'entry.dupTick': 'Hantar juga', 'entry.dupReason': 'Sebab menghantar juga',
+    'entry.balTitle': 'Melebihi baki klien', 'entry.balText': 'Bayaran ini melebihi baki {bal} untuk {matter} sebanyak {short}. Pelulus mesti memberi sebab untuk meluluskannya.',
+    'entry.matterInfo': '{name}. Baki {bal} setakat penyesuaian terakhir.', 'entry.pickMatter': 'Pilih fail', 'entry.saved': 'Draf disimpan sebagai {id}.', 'entry.submitted': '{id} dihantar untuk kelulusan.',
+    'entry.attachNote': 'Pratonton hilang selepas muat semula. Fail itu sendiri tidak disimpan dalam demo ini.', 'entry.addFiles': 'Tambah fail', 'entry.noPreview': 'Tiada pratonton selepas muat semula',
+    'entry.office': 'Akaun pejabat', 'entry.clientAcc': 'Akaun klien',
+    'ap.title': 'Kelulusan', 'ap.pending': 'Menunggu kelulusan', 'ap.approved': 'Diluluskan, belum dieksport', 'ap.all': 'Semua kemasukan', 'ap.empty': 'Tiada apa-apa di sini.',
+    'ap.clerkNote': 'Anda log masuk sebagai kerani, jadi kemasukan ini hanya boleh dibaca. Tukar kepada pelulus untuk meluluskan, menolak atau mengembalikannya.',
+    'ap.own': 'Anda mencipta kemasukan ini, jadi pelulus lain mesti meluluskannya.', 'ap.reasonReject': 'Sebab menolak', 'ap.reasonReturn': 'Ulasan untuk kerani',
+    'ap.reasonReopen': 'Sebab membuka semula', 'ap.balReason': 'Sebab meluluskan melebihi baki klien', 'ap.history': 'Sejarah',
+    'ap.approved.ok': '{id} diluluskan.', 'ap.rejected.ok': '{id} ditolak.', 'ap.returned.ok': '{id} dikembalikan kepada {name}.', 'ap.reopened.ok': '{id} dibuka semula untuk suntingan.',
+    'ap.details': 'Butiran', 'ap.warnings': 'Amaran', 'ap.reject': 'Tolak', 'ap.return': 'Kembalikan', 'ap.dupOverride': 'Dihantar walaupun ada amaran pendua: {reason}',
+    'kv.status': 'Status', 'kv.by': 'Dimasukkan oleh', 'kv.created': 'Dimasukkan', 'kv.approvedBy': 'Diluluskan oleh', 'kv.approvedAt': 'Diluluskan', 'kv.batch': 'Kelompok eksport',
+    'kv.rejectReason': 'Sebab penolakan', 'kv.returnComment': 'Ulasan pengembalian', 'kv.balOverride': 'Pengecualian baki',
+    'co.title': 'Pematuhan', 'co.open': 'Terbuka', 'co.done': 'Selesai', 'co.all': 'Semua', 'co.demo': 'Tarikh demo ditetapkan berdasarkan hari ini. Guna penjana di bawah untuk mencipta tarikh berkanun daripada peraturan hari akhir anda.',
+    'co.empty': 'Tiada peringatan di sini.', 'co.dueOn': 'Tamat {date}', 'co.overdueBy': 'Lewat {n} hari', 'co.today': 'Tamat hari ini', 'co.inDays': 'dalam {n} hari', 'co.oneDay': 'dalam 1 hari', 'co.oneOver': 'Lewat 1 hari',
+    'co.refAmt': 'Dihantar dengan rujukan {ref}, {amt}', 'co.refNo': 'No. rujukan', 'co.amount': 'Amaun (RM)', 'co.addTitle': 'Tambah peringatan', 'co.custom': 'Tajuk peringatan', 'co.date': 'Tarikh akhir',
+    'co.templates': 'Templat (tetapkan tarikh sendiri)', 'co.tpl.formc': 'Borang C (return cukai syarikat)', 'co.tpl.cp204': 'CP204 (ansuran anggaran cukai)', 'co.tpl.stamp': 'Penghantaran duti setem', 'co.tpl.ssm': 'Penyata tahunan (SSM)',
+    'co.gen': 'Peringatan berkanun untuk bulan gaji', 'co.genNote': 'KWSP, PERKESO, SIP dan PCB perlu dibayar pada hari yang ditetapkan bulan berikutnya. Peraturan hujung minggu dan hari akhir ada dalam Tetapan. Cuti umum tidak disemak.',
+    'co.genDone': '{n} peringatan dicipta untuk {period}.', 'co.genNone': 'Peringatan untuk {period} sudah wujud.', 'co.wage': 'Bulan gaji',
+    'co.payroll': 'Kalkulator caruman', 'co.payNote': 'Kadar dan siling gaji diambil daripada Tetapan dan hanya nilai ganti. Sahkan dengan jadual rasmi semasa sebelum membayar. PERKESO sebenarnya guna jadual kadar gaji, jadi angka di sini mungkin berbeza beberapa sen.',
+    'co.name': 'Pekerja', 'co.grossWage': 'Gaji kasar (RM)', 'co.pcb': 'PCB (RM)', 'co.addRow': 'Tambah pekerja', 'co.epfEr': 'KWSP majikan', 'co.epfEe': 'KWSP pekerja', 'co.socso': 'PERKESO (mjk + pkj)', 'co.eis': 'SIP (mjk + pkj)', 'co.totals': 'Jumlah',
+    'co.paid': '{n} draf kemasukan bayaran dicipta. Lihat di Kemasukan, Draf saya.', 'co.added': 'Peringatan ditambah.', 'co.marked': 'Ditanda sudah dihantar.',
+    'ex.title': 'Eksport', 'ex.ready': 'Diluluskan dan sedia dieksport', 'ex.none': 'Tiada kemasukan diluluskan yang menunggu eksport.', 'ex.selectAll': 'Pilih semua', 'ex.selected': '{n} dipilih, {total}',
+    'ex.preview': 'Pratonton susun atur', 'ex.fox': 'Susun atur FoxPro', 'ex.generic': 'Umum', 'ex.batches': 'Kelompok eksport', 'ex.noBatches': 'Belum ada kelompok.', 'ex.batchMade': 'Kelompok {id} dicipta. Muat turun di bawah.',
+    'ex.approverOnly': 'Hanya pelulus boleh mencipta kelompok eksport.', 'ex.fixLayout': 'Susun atur FoxPro mempunyai nama medan yang tidak sah. Betulkan dalam Tetapan sebelum memuat turun fail FoxPro.',
+    'ex.entries': '{n} kemasukan', 'ex.dl.xlsx': 'Excel (.xlsx)', 'ex.dl.csv': 'CSV (umum)', 'ex.dl.fox': 'CSV FoxPro', 'ex.dl.json': 'JSON (muatan API)',
+    'ex.xlsxMissing': 'Pustaka Excel tidak dapat dimuatkan, jadi CSV disimpan sebagai ganti.', 'ex.saved': '{name} disimpan.', 'ex.cancelled': 'Muat turun dibatalkan.', 'ex.busy': 'Satu gesaan simpan lain sedang dibuka. Cuba sebentar lagi.',
+    'ex.unavailable': 'Muat turun tidak tersedia dalam paparan ini. Salin teks di bawah sebagai ganti.', 'ex.copied': 'Disalin.', 'ex.copyFail': 'Salinan disekat. Pilih teks dan salin sendiri.',
+    'ex.layoutNote': 'Fail FoxPro menggunakan susun atur semasa dalam Tetapan, dikenakan pada kelompok seperti semasa diluluskan. Semak dengan struktur DBF anda sebelum mengimport.',
+    'au.title': 'Log audit', 'au.time': 'Masa', 'au.user': 'Pengguna', 'au.action': 'Tindakan', 'au.entry': 'Kemasukan', 'au.detail': 'Butiran', 'au.all': 'Semua', 'au.search': 'Cari no. kemasukan atau catatan',
+    'au.showing': 'Menunjukkan {n} daripada {m} peristiwa', 'au.csv': 'Muat turun CSV', 'au.empty': 'Tiada peristiwa sepadan.',
+    'act.create': 'Dicipta', 'act.edit': 'Disunting', 'act.submit': 'Dihantar', 'act.approve': 'Diluluskan', 'act.reject': 'Ditolak', 'act.return': 'Dikembalikan', 'act.reopen': 'Dibuka semula',
+    'act.export': 'Dieksport', 'act.settings': 'Tetapan', 'act.reminder': 'Peringatan',
+    'se.title': 'Tetapan dan ujian', 'se.lang': 'Bahasa', 'se.users': 'Pasukan', 'se.addUser': 'Tambah ahli pasukan', 'se.userName': 'Nama', 'se.userRole': 'Peranan',
+    'se.dues': 'Hari akhir berkanun', 'se.roll': 'Jika hari akhir jatuh pada hujung minggu', 'se.roll.none': 'Kekalkan tarikh', 'se.roll.next': 'Alih ke Isnin berikutnya', 'se.roll.prev': 'Alih ke Jumaat sebelumnya',
+    'se.dueDay': 'Hari akhir pada bulan berikutnya', 'se.rates': 'Kadar caruman dan siling', 'se.verify': 'Nilai ganti. Sahkan dengan jadual rasmi semasa.',
+    'se.epfLow': 'KWSP majikan % (gaji hingga ambang)', 'se.epfHigh': 'KWSP majikan % (melebihi ambang)', 'se.epfThr': 'Ambang gaji KWSP (RM)', 'se.epfEe': 'KWSP pekerja %', 'se.epfRound': 'Bundarkan KWSP ke ringgit seterusnya',
+    'se.socsoEr': 'PERKESO majikan %', 'se.socsoEe': 'PERKESO pekerja %', 'se.socsoCap': 'Siling gaji PERKESO (RM)', 'se.eisEr': 'SIP majikan %', 'se.eisEe': 'SIP pekerja %', 'se.eisCap': 'Siling gaji SIP (RM)',
+    'se.export': 'Susun atur eksport', 'se.dateFmt': 'Format tarikh', 'se.delim': 'Pembatas', 'se.decimal': 'Tanda perpuluhan', 'se.header': 'Sertakan baris pengepala', 'se.bom': 'Tambah BOM pada fail FoxPro', 'se.upper': 'Huruf besar untuk kod jenis dan lejar',
+    'se.delim.comma': 'Koma', 'se.delim.semicolon': 'Koma bertitik', 'se.delim.tab': 'Tab', 'se.delim.pipe': 'Paip', 'se.dec.dot': 'Titik (1234.56)', 'se.dec.comma': 'Koma (1234,56)',
+    'se.map': 'Pemetaan medan FoxPro', 'se.mapNote': 'Susunan penting untuk import mengikut kedudukan. Nama medan mesti huruf besar, bermula dengan huruf dan tidak melebihi 10 aksara.', 'se.mapOn': 'Aktif', 'se.mapName': 'Nama medan', 'se.mapSrc': 'Sumber',
+    'se.mapAdd': 'Tambah medan', 'se.mapReset': 'Set semula kepada lalai', 'se.mapOk': 'Susun atur sah.', 'se.p.too_long': 'melebihi 10 aksara', 'se.p.bad_name': 'mesti huruf besar, bermula dengan huruf, hanya huruf, nombor dan garis bawah',
+    'se.p.duplicate': 'digunakan dua kali', 'se.p.bad_source': 'medan sumber tidak dikenali',
+    'se.data': 'Data demo', 'se.dataNote': 'Set semula kemasukan, peringatan, log audit dan tetapan kepada set contoh. Bahasa dan pengguna terpilih kekal.', 'se.reset.ok': 'Data demo dipulihkan.',
+    'se.storage': 'Storan', 'se.storage.ok': 'Disimpan dalam pelayar ini.', 'se.storage.mem': 'Storan pelayar disekat di sini, jadi perubahan hanya kekal sehingga anda tutup atau muat semula halaman ini.',
+    'se.tests': 'Ujian kendiri', 'se.testsNote': 'Menjalankan setiap peraturan (R1 hingga R9), penghurai tampalan, susun atur eksport dan pengiraan pematuhan pada salinan baharu data demo. Data anda tidak disentuh.',
+    'se.testsSummary': '{pass} daripada {total} lulus', 'se.manual': 'Skrip ujian manual', 'se.changed': 'Tetapan disimpan.',
+    'man.1': 'Tukar kepada Aina (Kerani). Dalam Peti masuk, tampal mesej yang ada amaun dan tarikh, kemudian tambah ke peti masuk.', 'man.2': 'Buka, lengkapkan borang, pilih lejar klien tanpa fail dan cuba hantar. No. fail diperlukan.',
+    'man.3': 'Pilih fail, hantar, kemudian tukar kepada Account Manager dan buka Kelulusan.', 'man.4': 'Cipta kemasukan sebagai Account Manager, hantar dan cuba lulus. Anda disekat. Tukar kepada Partner dan lulus.',
+    'man.5': 'Buka bayaran kepada Stamp Office. Ia melebihi baki klien, jadi kelulusan memerlukan sebab.', 'man.6': 'Dalam Eksport, cipta kelompok daripada kemasukan diluluskan, muat turun CSV FoxPro dan semak dengan susun atur DBF anda.',
+    'man.7': 'Buka Log audit dan sahkan setiap langkah di atas muncul dengan pengguna yang betul.',
+    'ce.IMMUTABLE': 'Kemasukan yang diluluskan dikunci. Pelulus boleh membukanya semula dengan memberi sebab.', 'ce.LOCKED_SUBMITTED': 'Kemasukan ini menunggu kelulusan dan tidak boleh disunting.', 'ce.LOCKED_REJECTED': 'Kemasukan yang ditolak tidak boleh disunting. Salin ke draf baharu sebagai ganti.',
+    'ce.NOT_OWNER': 'Hanya orang yang mencipta kemasukan ini boleh mengubahnya.', 'ce.BAD_STATE': 'Tindakan ini tidak tersedia pada status semasa kemasukan.', 'ce.VALIDATION': 'Beberapa medan perlu diperbaiki.',
+    'ce.DUPLICATE': 'Ini kelihatan seperti pendua. Tandakan "Hantar juga" dan beri sebab untuk meneruskan.', 'ce.FORBIDDEN': 'Hanya pelulus boleh melakukan ini.', 'ce.SELF_APPROVAL': 'Anda mencipta kemasukan ini, jadi anda tidak boleh meluluskannya. Pelulus lain mesti melakukannya.',
+    'ce.BALANCE_OVERRIDE_REQUIRED': 'Bayaran ini melebihi baki klien. Masukkan sebab untuk meluluskannya juga.', 'ce.REASON_REQUIRED': 'Sebab diperlukan.', 'ce.EXPORTED_LOCKED': 'Kemasukan ini berada dalam kelompok eksport dan tidak boleh dibuka semula.',
+    'ce.NOT_EXPORTABLE': 'Hanya kemasukan diluluskan yang belum dalam kelompok boleh dieksport.', 'ce.NOTHING_SELECTED': 'Pilih sekurang-kurangnya satu kemasukan.', 'ce.NOT_FOUND': 'Rekod itu tidak wujud lagi.',
+    'err.required': 'Wajib diisi', 'err.invalid_date': 'Masukkan tarikh yang sah', 'err.amount_positive': 'Masukkan amaun melebihi sifar', 'err.matter_required': 'No. fail diperlukan untuk lejar klien',
+    'err.matter_unknown': 'No. fail ini tiada dalam senarai', 'err.invalid_amount': 'Masukkan amaun yang sah', 'err.invalid': 'Tidak sah'
+  }
+};
+
+(function () {
+  'use strict';
+  var KEY = 'aih.state.v1', UIKEY = 'aih.ui.v1';
+  var TABS = [['dashboard', 'nav.dashboard', 'grid'], ['inbox', 'nav.inbox', 'inbox'], ['entry', 'nav.entry', 'file'], ['approvals', 'nav.approvals', 'check'],
+    ['compliance', 'nav.compliance', 'cal'], ['export', 'nav.export', 'out'], ['audit', 'nav.audit', 'list'], ['setup', 'nav.setup', 'sliders']];
+  var PRIMARY = ['dashboard', 'inbox', 'entry', 'approvals'];
+  var ICON = {
+    grid: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
+    inbox: '<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
+    file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+    more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    cal: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+    out: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
+    list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+    sliders: '<line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/>'
+  };
+  var DELIMS = { comma: ',', semicolon: ';', tab: '\t', pipe: '|' };
+  var WD = { en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'], ms: ['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab'] };
+  var KIND_PAYEE = { EPF: 'KWSP (EPF)', SOCSO: 'PERKESO (SOCSO)', EIS: 'PERKESO (EIS)', PCB: 'LHDN (PCB)' };
+
+  var state, storageOk = true, blobStore = {}, dlCap;
+  var ui = {
+    tab: 'dashboard', userId: 'aina', entryId: null, entryDraft: null, entryNote: '', attach: [], drawerId: null, copyDlg: null,
+    apFilter: 'pending', exportSel: {}, exportLayout: 'fox', auditF: { user: '', action: '', q: '' }, remFilter: 'open', remDoneId: null,
+    payRows: [{ name: 'Staff A', wage: 3200, pcb: 0 }, { name: 'Staff B', wage: 4800, pcb: 85 }, { name: 'Staff C', wage: 6500, pcb: 260 }],
+    payPeriod: '', genPeriod: '', selftest: null, moreOpen: false, confirmReset: false, pasteSource: 'whatsapp', uploadSource: 'upload', pasteText: '', remTitle: ''
+  };
+
+  /* ---------- helpers ---------- */
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function lang() { return (state && state.settings && state.settings.lang) || 'en'; }
+  function t(k, v) {
+    var s = (I18N[lang()] || {})[k];
+    if (s === undefined) s = I18N.en[k];
+    if (s === undefined) return k;
+    if (v) Object.keys(v).forEach(function (n) { s = s.split('{' + n + '}').join(v[n]); });
+    return s;
+  }
+  function money(n) { return Core.fmtMoney(n); }
+  function fmtTs(iso) { var d = new Date(iso); return isNaN(d) ? '' : pad(d.getDate()) + '/' + pad(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function me() { return Core.userById(state, ui.userId) || state.users[0]; }
+  function num(v) { var x = parseFloat(String(v).replace(/,/g, '')); return isFinite(x) ? x : 0; }
+  function val(sel) { var el = $(sel); return el ? String(el.value || '').trim() : ''; }
+  function icon(n) { return '<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' + ICON[n] + '</svg>'; }
+  function chip(s) { return '<span class="chip st-' + esc(s) + '">' + esc(t('st.' + s)) + '</span>'; }
+  function ltag(l) { return '<span class="ltag l-' + esc(l) + '">' + esc(t('ledger.' + l)) + '</span>'; }
+  function opts(list, cur, labelFn) { return list.map(function (x) { return '<option value="' + esc(x) + '"' + (x === cur ? ' selected' : '') + '>' + esc(labelFn ? labelFn(x) : x) + '</option>'; }).join(''); }
+  function getPath(o, p) { return p.split('.').reduce(function (a, k) { return a ? a[k] : undefined; }, o); }
+  function setPath(o, p, v) { var ks = p.split('.'), last = ks.pop(); var tgt = ks.reduce(function (a, k) { return a[k]; }, o); tgt[last] = v; }
+  function fill(def, cur) {
+    if (!cur || typeof cur !== 'object' || Array.isArray(def)) return cur === undefined ? def : cur;
+    var out = {}; Object.keys(def).forEach(function (k) { out[k] = typeof def[k] === 'object' && !Array.isArray(def[k]) ? fill(def[k], cur[k]) : (cur[k] === undefined ? def[k] : cur[k]); });
+    return out;
+  }
+  function prevMonth() { var d = new Date(); var y = d.getFullYear(), m = d.getMonth(); if (m < 1) { m = 12; y--; } return y + '-' + pad(m); }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function toast(msg, bad) {
+    var el = document.createElement('div'); el.className = 'toast' + (bad ? ' bad' : ''); el.textContent = msg;
+    $('#toast').appendChild(el); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, bad ? 6500 : 3500);
+  }
+  function showErr(err, sel) {
+    if (!err || err.name !== 'CoreError') throw err;
+    var m = t('ce.' + err.code);
+    var el = sel ? $(sel) : null;
+    if (el) { el.textContent = m; el.hidden = false; } else toast(m, true);
+  }
+
+  /* ---------- persistence ---------- */
+  function loadAll() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (raw) { var s = JSON.parse(raw); if (s && s.v === 1 && Array.isArray(s.entries)) state = s; }
+    } catch (e) { storageOk = false; }
+    if (!state) state = Core.seedState(Core.todayLocal());
+    state.settings = fill(Core.defaultSettings(), state.settings);
+    try {
+      var u = JSON.parse(localStorage.getItem(UIKEY) || 'null');
+      if (u) { if (u.userId && Core.userById(state, u.userId)) ui.userId = u.userId; if (u.tab && TABS.some(function (x) { return x[0] === u.tab; })) ui.tab = u.tab; }
+    } catch (e) { /* ignore */ }
+    var h = (location.hash || '').replace('#', '');
+    if (TABS.some(function (x) { return x[0] === h; })) ui.tab = h;
+    if (!Core.userById(state, ui.userId)) ui.userId = state.users[0].id;
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); localStorage.setItem(UIKEY, JSON.stringify({ userId: ui.userId, tab: ui.tab })); storageOk = true; } catch (e) { storageOk = false; }
+  }
+  function commit(msg) { save(); render(); if (msg) toast(msg); }
+
+  /* ---------- entry rows ---------- */
+  function entryTitle(e) { return e.payee || (e.attachments[0] && e.attachments[0].name) || t('src.' + e.source); }
+  function erow(e, o) {
+    o = o || {};
+    var desc = e.description || (e.rawText ? e.rawText.replace(/\s+/g, ' ').slice(0, 90) : '');
+    var date = e.docDate ? Core.fmtDate(e.docDate) : Core.fmtDate(Core.localDateOf(e.createdAt));
+    var dups = ['draft', 'returned', 'submitted'].indexOf(e.status) >= 0 ? Core.findDuplicates(e, state.entries).length : 0;
+    var lead = o.check ? '<input type="checkbox" tabindex="-1" aria-hidden="true"' + (o.checked ? ' checked' : '') + '> ' : '';
+    var attrs = o.check ? ' role="checkbox" aria-checked="' + (o.checked ? 'true' : 'false') + '" data-act="toggle-sel" data-id="' + esc(e.id) + '"' : ' role="button" data-act="open-drawer" data-id="' + esc(e.id) + '"';
+    return '<div class="erow" tabindex="0"' + attrs + '>' +
+      '<div class="er-main"><span class="er-id">' + lead + esc(e.id) + '</span><span class="er-payee">' + esc(entryTitle(e)) + '</span>' + (desc ? '<span class="er-desc">' + esc(desc) + '</span>' : '') + '</div>' +
+      '<div class="er-tags"><span class="type">' + esc(t('type.' + e.type)) + '</span>' + (e.status === 'inbox' && !e.payee ? '' : ltag(e.ledger)) + chip(e.status) + (dups ? '<span class="chip st-soon">' + esc(t('entry.dupTitle')) + '</span>' : '') + '</div>' +
+      '<div class="er-amt"><span class="num">' + (e.totalAmount > 0 ? esc(money(e.totalAmount)) : '&mdash;') + '</span><span class="er-date">' + esc(date) + '</span></div>' +
+      (o.extra ? '<div class="er-act">' + o.extra + '</div>' : '') + '</div>';
+  }
+  function attachHTML(list) {
+    return list.map(function (a, i) {
+      var isImg = /^image\//.test(a.type) || /\.(jpe?g|png|gif|webp)$/i.test(a.name);
+      var thumb = a.url && isImg ? '<img src="' + esc(a.url) + '" alt="">' : '<div class="fi">' + esc((a.name.split('.').pop() || 'file').slice(0, 4).toUpperCase()) + '</div>';
+      return '<div class="attach">' + thumb + '<div class="meta"><div>' + esc(a.name) + '</div><div class="muted">' + esc(Math.max(1, Math.round(a.size / 1024))) + ' KB' + (a.url ? '' : ' &middot; ' + esc(t('entry.noPreview'))) + '</div></div>' +
+        (o_rm(i)) + '</div>';
+    }).join('');
+  }
+  function o_rm(i) { return i === undefined ? '' : '<button class="btn sm quiet" data-act="rm-attach" data-i="' + i + '">' + esc(t('btn.remove')) + '</button>'; }
+
+  /* ---------- views ---------- */
+  function vDashboard() {
+    var today = Core.todayLocal(), s = Core.dashboardStats(state, today), u = me();
+    function kpi(tab, label, n, sub, cls, extra) {
+      return '<button class="kpi ' + (cls || '') + '" data-act="go" data-tab="' + tab + '"' + (extra || '') + '><span class="kpi-l">' + esc(label) + '</span><span class="kpi-n">' + n + '</span><span class="kpi-s">' + esc(sub) + '</span></button>';
+    }
+    function pairs(b) { return '<span class="pair"><span>' + esc(t('dash.monthOut')) + '</span><b>' + esc(money(b.out)) + '</b></span><span class="pair"><span>' + esc(t('dash.monthIn')) + '</span><b>' + esc(money(b.inn)) + '</b></span>'; }
+    var h = '<div class="page-head"><h1>' + esc(t('dash.title')) + '</h1><span class="muted">' + esc(t('dash.asAt', { date: Core.fmtDate(today) })) + '</span></div><div class="stack">';
+    h += '<div class="kpis">' +
+      kpi('inbox', t('dash.inbox'), s.inbox, t('dash.inboxSub')) +
+      kpi('approvals', t('dash.await'), s.submitted, t('dash.awaitSub'), '', ' data-filter="pending"') +
+      kpi('compliance', t('dash.overdue'), s.overdue, t('dash.overdueSub'), s.overdue ? 'bad' : '') +
+      kpi('compliance', t('dash.soon'), s.soon, t('dash.soonSub'), s.soon ? 'warn' : '') +
+      '<button class="kpi" data-act="go" data-tab="approvals" data-filter="approved"><span class="kpi-l">' + esc(t('dash.office')) + '</span>' + pairs(s.month.office) + '<span class="kpi-s">' + esc(t('dash.month')) + '</span></button>' +
+      '<button class="kpi" data-act="go" data-tab="approvals" data-filter="approved"><span class="kpi-l">' + esc(t('dash.client')) + '</span>' + pairs(s.month.client) + '<span class="kpi-s">' + esc(t('dash.month')) + '</span></button></div>';
+    h += '<div class="grid2"><div class="card"><h3>' + esc(t('dash.attention')) + '</h3>';
+    if (!s.attention.length) h += '<p class="empty">' + esc(t('dash.clear')) + '</p>';
+    else {
+      h += '<div class="list">' + s.attention.map(function (a) {
+        var txt, act, id = a.entryId || '';
+        if (a.kind === 'overdue') { txt = t('att.overdue', { title: a.title, due: Core.fmtDate(a.due) }); act = 'data-act="go" data-tab="compliance"'; }
+        else {
+          act = 'data-act="open-drawer" data-id="' + esc(id) + '"';
+          if (a.kind === 'balance') txt = t('att.balance', { id: id, amt: money(a.detail.total), matter: a.detail.matterNo, short: money(a.detail.shortBy) });
+          else if (a.kind === 'duplicate') txt = t('att.duplicate', { id: id, ids: a.detail.join(', ') });
+          else if (a.kind === 'returned') txt = t('att.returned', { id: id, detail: a.detail });
+          else txt = t('att.rejected', { id: id, detail: a.detail });
+        }
+        var cls = a.kind === 'overdue' || a.kind === 'balance' ? 'st-overdue' : a.kind === 'duplicate' || a.kind === 'returned' ? 'st-soon' : 'st-rejected';
+        return '<div class="erow" style="grid-template-columns:auto minmax(0,1fr)" tabindex="0" role="button" ' + act + '><span class="chip ' + cls + '">' + esc(t(a.kind === 'overdue' ? 'st.overdue' : a.kind === 'balance' ? 'entry.balTitle' : a.kind === 'duplicate' ? 'entry.dupTitle' : a.kind === 'returned' ? 'st.returned' : 'st.rejected')) + '</span><span>' + esc(txt) + '</span></div>';
+      }).join('') + '</div>';
+    }
+    h += '</div><div class="card"><h3>' + esc(t('dash.recent')) + '</h3><div class="hist">' +
+      state.audit.slice().sort(function (a, b) { return a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : (a.id < b.id ? 1 : -1); }).slice(0, 6).map(function (ev) {
+        return '<div><span class="ts">' + esc(fmtTs(ev.ts)) + '</span><span><b>' + esc(Core.userName(state, ev.user)) + '</b> ' + esc(t('act.' + ev.action)) + ' ' + esc(ev.entryId) + '</span></div>';
+      }).join('') + '</div></div></div>';
+    h += '<p class="note small">' + esc(t('dash.demo')) + '</p></div>';
+    return h;
+  }
+
+  function parsePaste() {
+    var p = Core.parsePasted(ui.pasteText);
+    return p;
+  }
+  function pasteResultHTML() {
+    if (!ui.pasteText.trim()) return '<p class="muted small">' + esc(t('inbox.nothing')) + '</p>';
+    var p = parsePaste();
+    var chips = [['amount', p.amount !== null ? money(p.amount) : ''], ['date', p.date ? Core.fmtDate(p.date) : ''], ['refNo', p.refNo], ['payee', p.payee], ['type', t('type.' + p.type)]];
+    return '<div class="found">' + chips.map(function (c) {
+      var lbl = c[0] === 'amount' ? t('f.total') : c[0] === 'date' ? t('f.docDate') : c[0] === 'refNo' ? t('f.refNo') : c[0] === 'payee' ? t('f.payee') : t('f.type');
+      return '<span class="chip ' + (c[1] ? '' : 'miss') + '">' + esc(lbl) + ': ' + esc(c[1] || '—') + '</span>';
+    }).join('') + '</div>';
+  }
+  function vInbox() {
+    var items = state.entries.filter(function (e) { return e.status === 'inbox'; }).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+    var h = '<div class="page-head"><h1>' + esc(t('inbox.title')) + '</h1></div><div class="stack"><div class="grid2 even">';
+    h += '<div class="card stack"><label class="drop" id="drop"><input id="file-input" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,image/*,application/pdf" hidden>' + icon('out') + '<strong>' + esc(t('inbox.drop')) + '</strong><span class="small">' + esc(t('inbox.dropSub')) + '</span></label>' +
+      '<div class="field"><label for="upload-source">' + esc(t('inbox.source')) + '</label><select id="upload-source" data-ui="uploadSource">' + opts(Core.SOURCES, ui.uploadSource, function (x) { return t('src.' + x); }) + '</select></div>' +
+      '<p class="muted small">' + esc(t('inbox.stub')) + '</p></div>';
+    h += '<div class="card stack"><div class="field"><label for="paste-text">' + esc(t('inbox.paste')) + '</label><textarea id="paste-text" placeholder="' + esc(t('inbox.pastePh')) + '">' + esc(ui.pasteText) + '</textarea></div>' +
+      '<div id="paste-result">' + pasteResultHTML() + '</div><div class="row"><select id="paste-source" data-ui="pasteSource" style="width:auto">' + opts(Core.SOURCES, ui.pasteSource, function (x) { return t('src.' + x); }) + '</select>' +
+      '<button class="btn primary" data-act="add-paste">' + esc(t('btn.addInbox')) + '</button></div></div></div>';
+    h += '<div class="card"><h3>' + esc(t('inbox.queue')) + ' (' + items.length + ')</h3>';
+    if (!items.length) h += '<p class="empty">' + esc(t('inbox.empty')) + '</p>';
+    else {
+      h += '<div class="list">' + items.map(function (e) {
+        var extra = '<button class="btn sm primary" data-act="open-entry" data-id="' + esc(e.id) + '">' + esc(t('btn.open')) + '</button>' +
+          (e.attachments.length ? '<button class="btn sm" data-act="extract" data-id="' + esc(e.id) + '">' + esc(t('btn.extract')) + '</button>' : '') +
+          '<span class="muted small">' + esc(t('src.' + e.source)) + ' &middot; ' + esc(Core.userName(state, e.createdBy)) + '</span>';
+        return erow(e, { extra: extra });
+      }).join('') + '</div><p class="muted small" style="margin-top:10px">' + esc(t('inbox.simNote')) + '</p>';
+    }
+    return h + '</div></div>';
+  }
+
+  function blankDraft() {
+    return { type: 'bill', source: 'upload', docDate: Core.todayLocal(), payee: '', refNo: '', description: '', category: '', netAmount: '', taxAmount: '', ledger: 'office', matterNo: '', rawText: '' };
+  }
+  function entryToDraft(e) {
+    var d = blankDraft();
+    ['type', 'source', 'docDate', 'payee', 'refNo', 'description', 'category', 'ledger', 'matterNo', 'rawText'].forEach(function (k) { d[k] = e[k] || d[k]; });
+    d.docDate = e.docDate || ''; d.category = e.category || ''; d.matterNo = e.matterNo || '';
+    d.netAmount = e.netAmount ? String(e.netAmount) : ''; d.taxAmount = e.taxAmount ? String(e.taxAmount) : '';
+    return d;
+  }
+  function openEntry(id, prefill, note) {
+    ui.entryId = id || null; ui.entryNote = note || '';
+    var e = id ? Core.findEntry(state, id) : null;
+    ui.entryDraft = e ? entryToDraft(e) : blankDraft();
+    if (prefill) Object.keys(prefill).forEach(function (k) { if (prefill[k] !== undefined && prefill[k] !== null && prefill[k] !== '') ui.entryDraft[k] = (k === 'netAmount' || k === 'taxAmount') ? String(prefill[k]) : prefill[k]; });
+    var store = (e && blobStore[e.id]) || [];
+    ui.attach = e ? e.attachments.map(function (a) { var m = store.filter(function (s) { return s.name === a.name; })[0]; return { name: a.name, size: a.size, type: a.type, url: m ? m.url : '' }; }) : [];
+    ui.drawerId = null;
+    setTab('entry');
+  }
+  function draftAsEntry() {
+    var d = ui.entryDraft, x = { id: ui.entryId, type: d.type, docDate: d.docDate, payee: d.payee, refNo: d.refNo, netAmount: Core.round2(num(d.netAmount)), taxAmount: Core.round2(num(d.taxAmount)), ledger: d.ledger, matterNo: d.ledger === 'client' ? d.matterNo : '', status: 'draft' };
+    x.totalAmount = Core.computeTotal(x.netAmount, x.taxAmount);
+    return x;
+  }
+  function collectPatch() {
+    var d = ui.entryDraft;
+    return { type: d.type, source: d.source, docDate: d.docDate, payee: d.payee, refNo: d.refNo, description: d.description, category: d.category,
+      netAmount: num(d.netAmount), taxAmount: num(d.taxAmount), ledger: d.ledger, matterNo: d.ledger === 'client' ? d.matterNo : '',
+      attachments: ui.attach.map(function (a) { return { name: a.name, size: a.size, type: a.type }; }), rawText: d.rawText };
+  }
+  function vEntry() {
+    if (!ui.entryDraft) { ui.entryDraft = blankDraft(); ui.attach = []; }
+    var d = ui.entryDraft, e = ui.entryId ? Core.findEntry(state, ui.entryId) : null, u = me();
+    var mine = state.entries.filter(function (x) { return (x.status === 'inbox') || ((x.status === 'draft' || x.status === 'returned') && x.createdBy === u.id); }).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+    var payees = {}; state.entries.forEach(function (x) { if (x.payee) payees[x.payee] = 1; });
+    function fld(label, id, inner, cls) { return '<div class="field ' + (cls || '') + '"><label for="' + id + '">' + esc(label) + '</label>' + inner + '<span class="ferr" id="err-' + id.replace('f-', '') + '"></span></div>'; }
+    function seg(name, list, cur, lblPrefix) {
+      return '<div class="seg" role="radiogroup">' + list.map(function (x) { return '<label><input type="radio" name="' + name + '" data-f="' + name.replace('f-', '') + '" value="' + x + '"' + (x === cur ? ' checked' : '') + '><span>' + esc(t(lblPrefix + x)) + '</span></label>'; }).join('') + '</div>';
+    }
+    var h = '<div class="page-head"><h1>' + esc(t('entry.title')) + '</h1><div class="row"><span class="muted">' + (e ? esc(t('entry.edit', { id: e.id })) + ' ' + chip(e.status) : esc(t('entry.new'))) + '</span><button class="btn" data-act="new-entry">' + esc(t('btn.new')) + '</button></div></div>';
+    h += '<div class="grid2"><div class="card stack"><div class="fields">';
+    h += '<div class="field full"><span class="lbl">' + esc(t('f.type')) + '</span>' + seg('f-type', Core.TYPES, d.type, 'type.') + '</div>';
+    h += fld(t('f.docDate'), 'f-docDate', '<input id="f-docDate" type="date" data-f="docDate" value="' + esc(d.docDate) + '">');
+    h += fld(t('f.refNo'), 'f-refNo', '<input id="f-refNo" type="text" data-f="refNo" value="' + esc(d.refNo) + '" autocomplete="off">');
+    h += fld(t('f.payee'), 'f-payee', '<input id="f-payee" type="text" list="payee-list" data-f="payee" value="' + esc(d.payee) + '" autocomplete="off"><datalist id="payee-list">' + Object.keys(payees).map(function (p) { return '<option value="' + esc(p) + '">'; }).join('') + '</datalist>', 'full');
+    h += fld(t('f.description'), 'f-description', '<input id="f-description" type="text" data-f="description" value="' + esc(d.description) + '">', 'full');
+    h += fld(t('f.category'), 'f-category', '<select id="f-category" data-f="category"><option value="">' + esc(t('f.none')) + '</option>' + opts(Core.CATEGORIES, d.category) + '</select>');
+    h += fld(t('f.source'), 'f-source', '<select id="f-source" data-f="source">' + opts(Core.SOURCES, d.source, function (x) { return t('src.' + x); }) + '</select>');
+    h += '<div class="field full"><span class="lbl">' + esc(t('f.ledger')) + '</span>' + seg('f-ledger', Core.LEDGERS, d.ledger, 'ledger.') + '</div>';
+    h += '<div class="field full" id="matter-row"' + (d.ledger === 'client' ? '' : ' hidden') + '><label for="f-matterNo">' + esc(t('f.matter')) + '</label><select id="f-matterNo" data-f="matterNo"><option value="">' + esc(t('entry.pickMatter')) + '</option>' +
+      state.matters.map(function (m) { return '<option value="' + esc(m.matterNo) + '"' + (m.matterNo === d.matterNo ? ' selected' : '') + '>' + esc(m.matterNo + ' — ' + m.clientName) + '</option>'; }).join('') + '</select><span class="muted small" id="matter-info"></span><span class="ferr" id="err-matterNo"></span></div>';
+    h += fld(t('f.net'), 'f-netAmount', '<input id="f-netAmount" type="number" inputmode="decimal" step="0.01" min="0" data-f="netAmount" value="' + esc(d.netAmount) + '">');
+    h += fld(t('f.tax'), 'f-taxAmount', '<input id="f-taxAmount" type="number" inputmode="decimal" step="0.01" min="0" data-f="taxAmount" value="' + esc(d.taxAmount) + '">');
+    h += '<div class="full"><div class="totalbox"><span class="lbl">' + esc(t('f.total')) + '</span><span class="num" id="f-total">' + esc(money(Core.computeTotal(num(d.netAmount), num(d.taxAmount)))) + '</span></div></div>';
+    h += '</div><div class="row"><button class="btn" data-act="save-entry">' + esc(t('btn.saveDraft')) + '</button><button class="btn primary" data-act="submit-entry">' + esc(t('btn.submit')) + '</button></div></div>';
+    h += '<div class="stack">';
+    if (ui.entryNote) h += '<p class="note">' + esc(t(ui.entryNote)) + '</p>';
+    if (e && e.status === 'returned' && e.returnComment) h += '<div class="note warn"><strong>' + esc(t('entry.returned')) + '</strong><br>' + esc(e.returnComment) + '</div>';
+    if (d.rawText) h += '<div class="card"><h3>' + esc(t('entry.raw')) + '</h3><p class="small" style="white-space:pre-wrap;overflow-wrap:anywhere">' + esc(d.rawText) + '</p></div>';
+    h += '<div class="note warn" id="dup-box" hidden><strong>' + esc(t('entry.dupTitle')) + '</strong><div id="dup-list" class="small"></div><label class="row small" style="margin-top:8px"><input type="checkbox" id="f-dupok"> ' + esc(t('entry.dupTick')) + '</label><input id="f-dupreason" type="text" placeholder="' + esc(t('entry.dupReason')) + '" style="margin-top:6px"><span class="ferr" id="dup-err"></span></div>';
+    h += '<div class="note bad" id="bal-box" hidden><strong>' + esc(t('entry.balTitle')) + '</strong><div id="bal-text" class="small"></div></div>';
+    h += '<div class="card"><h3>' + esc(t('f.attachments')) + '</h3><div class="stack"><div id="attach-list" class="stack">' + attachHTML(ui.attach) + '</div>' +
+      '<label class="btn" style="align-self:flex-start"><input id="f-files" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.gif,.webp,image/*,application/pdf" hidden>' + esc(t('entry.addFiles')) + '</label><p class="muted small">' + esc(t('entry.attachNote')) + '</p></div></div>';
+    h += '<div class="card"><h3>' + esc(t('entry.mine')) + '</h3>' + (mine.length ? '<div class="list">' + mine.map(function (x) { return erow(x, { extra: '<button class="btn sm primary" data-act="open-entry" data-id="' + esc(x.id) + '">' + esc(t('btn.open')) + '</button>' }); }).join('') + '</div>' : '<p class="empty">' + esc(t('entry.mineEmpty')) + '</p>') + '</div>';
+    return h + '</div></div>';
+  }
+  function refreshEntryHints() {
+    if (ui.tab !== 'entry' || !ui.entryDraft) return;
+    var x = draftAsEntry(), w = Core.entryWarnings(x, state);
+    var tot = $('#f-total'); if (tot) tot.textContent = money(x.totalAmount);
+    var mi = $('#matter-info'), m = Core.findMatter(state, x.matterNo);
+    if (mi) mi.textContent = m ? t('entry.matterInfo', { name: m.clientName, bal: money(m.clientBalance) }) : '';
+    var db = $('#dup-box');
+    if (db) {
+      db.hidden = !w.duplicates.length;
+      $('#dup-list').innerHTML = w.duplicates.map(function (id) { var o = Core.findEntry(state, id); return esc(id + ' · ' + o.payee + ' · ' + money(o.totalAmount) + ' · ' + Core.fmtDate(o.docDate) + ' · ' + t('st.' + o.status)); }).join('<br>');
+    }
+    var bb = $('#bal-box');
+    if (bb) { bb.hidden = !w.balance; if (w.balance) $('#bal-text').textContent = t('entry.balText', { short: money(w.balance.shortBy), bal: money(w.balance.balance), matter: w.balance.matterNo }); }
+    var mr = $('#matter-row'); if (mr) mr.hidden = ui.entryDraft.ledger !== 'client';
+  }
+  function persistEntry() {
+    var patch = collectPatch(), e;
+    if (ui.entryId) e = Core.saveEntry(state, me(), patch, ui.entryId);
+    else { e = Core.saveEntry(state, me(), patch); ui.entryId = e.id; }
+    blobStore[e.id] = ui.attach.filter(function (a) { return a.url; });
+    return e;
+  }
+  function showFieldErrors(errs) {
+    $$('.ferr').forEach(function (n) { n.textContent = ''; });
+    $$('.invalid').forEach(function (n) { n.classList.remove('invalid'); });
+    var first = null;
+    Object.keys(errs).forEach(function (k) {
+      var m = $('#err-' + k); if (m) m.textContent = t('err.' + errs[k]);
+      var inp = $('[data-f="' + k + '"]:not([type="radio"])'); if (inp) { inp.classList.add('invalid'); if (!first) first = inp; }
+    });
+    if (first) first.focus();
+  }
+
+  function vApprovals() {
+    var u = me(), f = ui.apFilter;
+    var list = state.entries.filter(function (e) { return f === 'pending' ? e.status === 'submitted' : f === 'approved' ? e.status === 'approved' : e.status !== 'inbox'; }).sort(function (a, b) { return a.createdAt < b.createdAt ? 1 : -1; });
+    var h = '<div class="page-head"><h1>' + esc(t('ap.title')) + '</h1><div class="seg tabs2">' +
+      [['pending', 'ap.pending'], ['approved', 'ap.approved'], ['all', 'ap.all']].map(function (x) { return '<button data-act="ap-filter" data-v="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + esc(t(x[1])) + '</button>'; }).join('') + '</div></div><div class="stack">';
+    if (!Core.isApprover(u)) h += '<p class="note">' + esc(t('ap.clerkNote')) + '</p>';
+    h += '<div class="card">' + (list.length ? '<div class="list">' + list.map(function (e) { return erow(e); }).join('') + '</div>' : '<p class="empty">' + esc(t('ap.empty')) + '</p>') + '</div></div>';
+    return h;
+  }
+  function detailOf(ev) {
+    var parts = [];
+    if (ev.before && ev.after) {
+      Object.keys(ev.after).forEach(function (k) {
+        function f(v) { return Array.isArray(v) ? v.length + ' file(s)' : (v === '' || v === null || v === undefined) ? '—' : String(v); }
+        parts.push(k + ': ' + f(ev.before[k]) + ' → ' + f(ev.after[k]));
+      });
+    }
+    if (ev.note) parts.push(ev.note);
+    return parts.join('; ');
+  }
+  function drawerHTML(e) {
+    var u = me(), w = Core.entryWarnings(e, state), appr = Core.isApprover(u);
+    var m = Core.findMatter(state, e.matterNo);
+    var hist = state.audit.filter(function (x) { return x.entryId === e.id; }).sort(function (a, b) { return a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : (a.id < b.id ? -1 : 1); });
+    var kv = [[t('f.type'), t('type.' + e.type)], [t('f.docDate'), Core.fmtDate(e.docDate)], [t('f.refNo'), e.refNo], [t('f.description'), e.description], [t('f.category'), e.category], [t('f.source'), t('src.' + e.source)],
+      [t('f.net'), money(e.netAmount)], [t('f.tax'), money(e.taxAmount)], [t('f.total'), money(e.totalAmount)], [t('f.ledger'), t('ledger.' + e.ledger)],
+      [t('f.matter'), e.matterNo ? e.matterNo + (m ? ' — ' + m.clientName : '') : ''], [t('kv.by'), Core.userName(state, e.createdBy)], [t('kv.created'), fmtTs(e.createdAt)]];
+    if (e.approvedBy) { kv.push([t('kv.approvedBy'), Core.userName(state, e.approvedBy)], [t('kv.approvedAt'), fmtTs(e.approvedAt)]); }
+    if (e.exportBatchId) kv.push([t('kv.batch'), e.exportBatchId]);
+    if (e.rejectReason) kv.push([t('kv.rejectReason'), e.rejectReason]);
+    if (e.returnComment) kv.push([t('kv.returnComment'), e.returnComment]);
+    if (e.duplicateOverrideReason) kv.push([t('entry.dupTitle'), e.duplicateOverrideReason]);
+    if (e.balanceOverrideReason) kv.push([t('kv.balOverride'), e.balanceOverrideReason]);
+    var store = blobStore[e.id] || [];
+    var atts = e.attachments.map(function (a) { var s = store.filter(function (x) { return x.name === a.name; })[0]; return { name: a.name, size: a.size, type: a.type, url: s ? s.url : '' }; });
+    var h = '<div class="drawer-head"><div><div class="er-id">' + esc(e.id) + '</div><h2>' + esc(entryTitle(e)) + '</h2><div class="row" style="margin-top:6px">' + chip(e.status) + ltag(e.ledger) + '</div></div><button class="btn quiet" data-act="close-drawer">' + esc(t('btn.close')) + '</button></div><div class="drawer-body">';
+    if (w.duplicates.length && ['draft', 'returned', 'submitted'].indexOf(e.status) >= 0) h += '<div class="note warn"><strong>' + esc(t('entry.dupTitle')) + '</strong><br>' + esc(w.duplicates.join(', ')) + (e.duplicateOverrideReason ? '<br>' + esc(t('ap.dupOverride', { reason: e.duplicateOverrideReason })) : '') + '</div>';
+    if (w.balance && ['draft', 'returned', 'submitted'].indexOf(e.status) >= 0) h += '<div class="note bad"><strong>' + esc(t('entry.balTitle')) + '</strong><br>' + esc(t('entry.balText', { short: money(w.balance.shortBy), bal: money(w.balance.balance), matter: w.balance.matterNo })) + '</div>';
+    h += '<dl class="kv">' + kv.filter(function (x) { return x[1] !== '' && x[1] !== undefined; }).map(function (x) { return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('') + '</dl>';
+    if (atts.length) h += '<div class="stack">' + attachHTML(atts.map(function (a) { return a; })).replace(/<button[^>]*data-act="rm-attach"[^>]*>.*?<\/button>/g, '') + '</div>';
+    if (e.rawText) h += '<div><h3>' + esc(t('entry.raw')) + '</h3><p class="small" style="white-space:pre-wrap;overflow-wrap:anywhere;margin-top:6px">' + esc(e.rawText) + '</p></div>';
+    h += '<p class="note bad" id="drawer-msg" hidden></p>';
+    var id = esc(e.id);
+    if (e.status === 'submitted') {
+      if (!appr) h += '<p class="note">' + esc(t('ap.clerkNote')) + '</p>';
+      else {
+        var own = e.createdBy === u.id;
+        if (own) h += '<p class="note warn">' + esc(t('ap.own')) + '</p>';
+        if (w.balance) h += '<div class="field"><label for="d-balance">' + esc(t('ap.balReason')) + '</label><input id="d-balance" type="text"></div>';
+        h += '<div class="row"><button class="btn primary" data-act="approve" data-id="' + id + '"' + (own ? ' disabled' : '') + '>' + esc(t('btn.approve')) + '</button></div>';
+        h += '<div class="field"><label for="d-reject">' + esc(t('ap.reasonReject')) + '</label><textarea id="d-reject"></textarea><div><button class="btn danger sm" data-act="reject" data-id="' + id + '">' + esc(t('btn.reject')) + '</button></div></div>';
+        h += '<div class="field"><label for="d-return">' + esc(t('ap.reasonReturn')) + '</label><textarea id="d-return"></textarea><div><button class="btn sm" data-act="return" data-id="' + id + '">' + esc(t('btn.return')) + '</button></div></div>';
+      }
+    }
+    if (e.status === 'approved' && appr) h += '<div class="field"><label for="d-reopen">' + esc(t('ap.reasonReopen')) + '</label><textarea id="d-reopen"></textarea><div><button class="btn sm" data-act="reopen" data-id="' + id + '">' + esc(t('btn.reopen')) + '</button></div></div>';
+    if (['inbox', 'draft', 'returned'].indexOf(e.status) >= 0 && (e.status === 'inbox' || e.createdBy === u.id || appr)) h += '<div class="row"><button class="btn primary" data-act="open-entry" data-id="' + id + '">' + esc(t('btn.edit')) + '</button></div>';
+    h += '<div><h3>' + esc(t('ap.history')) + '</h3><div class="hist" style="margin-top:8px">' + hist.map(function (x) {
+      return '<div><span class="ts">' + esc(fmtTs(x.ts)) + '</span><span><b>' + esc(Core.userName(state, x.user)) + '</b> ' + esc(t('act.' + x.action)) + (x.note ? ': ' + esc(x.note) : '') + '</span></div>';
+    }).join('') + '</div></div></div>';
+    return h;
+  }
+  function renderDrawer() {
+    var dr = $('#drawer'), sc = $('#scrim');
+    if (ui.copyDlg) {
+      dr.innerHTML = '<div class="drawer-head"><div><h2>' + esc(ui.copyDlg.filename) + '</h2><p class="muted small">' + esc(t('ex.unavailable')) + '</p></div><button class="btn quiet" data-act="close-drawer">' + esc(t('btn.close')) + '</button></div><div class="drawer-body"><textarea id="copy-text" readonly style="min-height:280px;font-family:var(--f-mono);font-size:.8rem"></textarea><div class="row"><button class="btn primary" data-act="copy-text">' + esc(t('btn.copy')) + '</button></div></div>';
+      $('#copy-text').value = ui.copyDlg.text;
+      dr.hidden = false; sc.hidden = false; return;
+    }
+    var e = ui.drawerId ? Core.findEntry(state, ui.drawerId) : null;
+    if (!e) { dr.hidden = true; sc.hidden = true; dr.innerHTML = ''; return; }
+    dr.innerHTML = drawerHTML(e); dr.hidden = false; sc.hidden = false;
+  }
+
+  function remDueText(r, today) {
+    var d = Core.diffDays(r.due, today), wd = WD[lang()][Core.parseISO(r.due).getUTCDay()];
+    var rel = r.status === 'done' ? '' : d < 0 ? (d === -1 ? t('co.oneOver') : t('co.overdueBy', { n: -d })) : d === 0 ? t('co.today') : d === 1 ? t('co.oneDay') : t('co.inDays', { n: d });
+    return t('co.dueOn', { date: Core.fmtDate(r.due) + ' ' + wd }) + (rel ? ' · ' + rel : '');
+  }
+  function payResultsHTML() {
+    var res = Core.calcPayroll(ui.payRows.map(function (r) { return { name: r.name, wage: num(r.wage), pcb: num(r.pcb) }; }), state.settings.rates), T = res.totals;
+    function r2(x) { return '<td class="r num">' + Core.fmtNumber(x) + '</td>'; }
+    return '<div class="scroll"><table><thead><tr><th>' + esc(t('co.name')) + '</th><th class="r">' + esc(t('co.epfEr')) + '</th><th class="r">' + esc(t('co.epfEe')) + '</th><th class="r">' + esc(t('co.socso')) + '</th><th class="r">' + esc(t('co.eis')) + '</th><th class="r">PCB</th></tr></thead><tbody>' +
+      res.rows.map(function (x) { return '<tr><td>' + esc(x.name || '—') + '</td>' + r2(x.epfEr) + r2(x.epfEe) + r2(Core.round2(x.socsoEr + x.socsoEe)) + r2(Core.round2(x.eisEr + x.eisEe)) + r2(x.pcb) + '</tr>'; }).join('') +
+      '<tr class="tot"><td>' + esc(t('co.totals')) + '</td>' + r2(T.epfEr) + r2(T.epfEe) + r2(Core.round2(T.socsoEr + T.socsoEe)) + r2(Core.round2(T.eisEr + T.eisEe)) + r2(T.pcb) + '</tr></tbody></table></div>';
+  }
+  function vCompliance() {
+    var today = Core.todayLocal(), f = ui.remFilter, u = me();
+    var list = state.reminders.filter(function (r) { return f === 'all' || (f === 'done' ? r.status === 'done' : r.status !== 'done'); }).sort(function (a, b) { return f === 'done' ? (a.due < b.due ? 1 : -1) : (a.due < b.due ? -1 : 1); });
+    var h = '<div class="page-head"><h1>' + esc(t('co.title')) + '</h1><div class="seg tabs2">' +
+      [['open', 'co.open'], ['done', 'co.done'], ['all', 'co.all']].map(function (x) { return '<button data-act="rem-filter" data-v="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + esc(t(x[1])) + '</button>'; }).join('') + '</div></div><div class="stack">';
+    h += '<p class="note small">' + esc(t('co.demo')) + '</p><div class="grid2"><div class="card">' + (list.length ? list.map(function (r) {
+      var st = Core.reminderStatus(r, today);
+      var s = '<div class="rem"><div><div class="t">' + esc(r.title) + '</div><div class="d">' + esc(remDueText(r, today)) + '</div></div><div>' + '<span class="chip st-' + st + '">' + esc(t('st.' + st)) + '</span></div>';
+      if (r.status === 'done') s += '<div class="act muted small">' + esc(t('co.refAmt', { ref: r.refNo || '—', amt: money(r.amount) })) + '</div>';
+      else if (ui.remDoneId === r.id) s += '<div class="act"><div class="done-form"><input id="rd-ref" type="text" placeholder="' + esc(t('co.refNo')) + '"><input id="rd-amt" type="number" step="0.01" min="0" placeholder="' + esc(t('co.amount')) + '"><span class="row"><button class="btn sm primary" data-act="rem-done-save" data-id="' + esc(r.id) + '">' + esc(t('btn.save')) + '</button><button class="btn sm" data-act="rem-done-cancel">' + esc(t('btn.cancel')) + '</button></span></div></div>';
+      else s += '<div class="act"><button class="btn sm" data-act="rem-done-open" data-id="' + esc(r.id) + '">' + esc(t('btn.markDone')) + '</button><button class="btn sm" data-act="rem-pay" data-id="' + esc(r.id) + '">' + esc(t('btn.createPay')) + '</button></div>';
+      return s + '</div>';
+    }).join('') : '<p class="empty">' + esc(t('co.empty')) + '</p>') + '</div>';
+    h += '<div class="stack"><div class="card stack"><h3>' + esc(t('co.addTitle')) + '</h3><div><span class="lbl">' + esc(t('co.templates')) + '</span><div class="chips" style="margin-top:6px">' +
+      [['co.tpl.formc'], ['co.tpl.cp204'], ['co.tpl.stamp'], ['co.tpl.ssm']].map(function (x) { return '<button data-act="rem-tpl" data-k="' + x[0] + '">' + esc(t(x[0])) + '</button>'; }).join('') + '</div></div>' +
+      '<div class="field"><label for="rem-title">' + esc(t('co.custom')) + '</label><input id="rem-title" type="text" value="' + esc(ui.remTitle) + '"></div><div class="field"><label for="rem-date">' + esc(t('co.date')) + '</label><input id="rem-date" type="date"></div>' +
+      '<div><button class="btn primary" data-act="rem-add">' + esc(t('btn.add')) + '</button></div></div>';
+    h += '<div class="card stack"><h3>' + esc(t('co.gen')) + '</h3><p class="muted small">' + esc(t('co.genNote')) + '</p><div class="field"><label for="gen-period">' + esc(t('co.wage')) + '</label><input id="gen-period" type="month" data-ui="genPeriod" value="' + esc(ui.genPeriod) + '"></div><div><button class="btn" data-act="rem-gen">' + esc(t('btn.generate')) + '</button></div></div></div></div>';
+    h += '<div class="card stack"><h3>' + esc(t('co.payroll')) + '</h3><p class="note warn small">' + esc(t('co.payNote')) + '</p><div class="field" style="max-width:14rem"><label for="pay-period">' + esc(t('co.wage')) + '</label><input id="pay-period" type="month" data-ui="payPeriod" value="' + esc(ui.payPeriod) + '"></div>' +
+      '<div class="scroll"><table><thead><tr><th>' + esc(t('co.name')) + '</th><th class="r">' + esc(t('co.grossWage')) + '</th><th class="r">' + esc(t('co.pcb')) + '</th><th></th></tr></thead><tbody>' +
+      ui.payRows.map(function (r, i) { return '<tr><td><input class="pay-in" data-i="' + i + '" data-k="name" type="text" value="' + esc(r.name) + '" aria-label="' + esc(t('co.name')) + '"></td><td><input class="pay-in" data-i="' + i + '" data-k="wage" type="number" step="0.01" min="0" value="' + esc(r.wage) + '" style="text-align:right" aria-label="' + esc(t('co.grossWage')) + '"></td><td><input class="pay-in" data-i="' + i + '" data-k="pcb" type="number" step="0.01" min="0" value="' + esc(r.pcb) + '" style="text-align:right" aria-label="' + esc(t('co.pcb')) + '"></td><td><button class="btn sm quiet" data-act="pay-rm" data-i="' + i + '">' + esc(t('btn.remove')) + '</button></td></tr>'; }).join('') + '</tbody></table></div>' +
+      '<div class="row"><button class="btn sm" data-act="pay-add">' + esc(t('co.addRow')) + '</button></div><div id="pay-results">' + payResultsHTML() + '</div><div><button class="btn primary" data-act="pay-entries">' + esc(t('btn.payEntries')) + '</button></div></div></div>';
+    return h;
+  }
+
+  function foxProblems() { return Core.validateFoxMap(state.settings.export.map); }
+  function vExport() {
+    var u = me(), cfg = state.settings.export, ctx = Core.ctxFor(state);
+    var ready = state.entries.filter(function (e) { return e.status === 'approved' && !e.exportBatchId; }).sort(function (a, b) { return a.approvedAt < b.approvedAt ? 1 : -1; });
+    var selIds = ready.filter(function (e) { return ui.exportSel[e.id]; }), probs = foxProblems();
+    var total = selIds.reduce(function (s, e) { return s + e.totalAmount; }, 0);
+    var h = '<div class="page-head"><h1>' + esc(t('ex.title')) + '</h1></div><div class="stack"><div class="card stack"><h3>' + esc(t('ex.ready')) + ' (' + ready.length + ')</h3>';
+    if (!ready.length) h += '<p class="empty">' + esc(t('ex.none')) + '</p>';
+    else {
+      h += '<div class="row"><label class="row small"><input type="checkbox" data-act="sel-all"' + (selIds.length === ready.length ? ' checked' : '') + '> ' + esc(t('ex.selectAll')) + '</label><span class="muted small">' + esc(t('ex.selected', { n: selIds.length, total: money(total) })) + '</span></div>' +
+        '<div class="list">' + ready.map(function (e) { return erow(e, { check: true, checked: !!ui.exportSel[e.id] }); }).join('') + '</div>';
+      if (!Core.isApprover(u)) h += '<p class="note">' + esc(t('ex.approverOnly')) + '</p>';
+      h += '<div><button class="btn primary" data-act="create-batch"' + (selIds.length && Core.isApprover(u) ? '' : ' disabled') + '>' + esc(t('btn.createBatch')) + '</button></div>';
+      var prev = (selIds.length ? selIds : ready).slice(0, 6), tb = Core.buildTable(prev, ui.exportLayout, cfg, ctx);
+      h += '<div class="row" style="justify-content:space-between"><h3>' + esc(t('ex.preview')) + '</h3><div class="seg tabs2"><button data-act="ex-layout" data-v="fox" aria-pressed="' + (ui.exportLayout === 'fox') + '">' + esc(t('ex.fox')) + '</button><button data-act="ex-layout" data-v="generic" aria-pressed="' + (ui.exportLayout === 'generic') + '">' + esc(t('ex.generic')) + '</button></div></div>';
+      if (ui.exportLayout === 'fox' && probs.length) h += '<p class="note bad small">' + esc(t('ex.fixLayout')) + '</p>';
+      h += '<div class="scroll"><table><thead><tr>' + tb.header.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        tb.rows.map(function (r) { return '<tr>' + r.map(function (v) { return '<td class="' + (typeof v === 'number' ? 'r num' : '') + '">' + esc(typeof v === 'number' ? Core.fmtNumber(v, ui.exportLayout === 'fox' ? cfg.decimal : '.') : v) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
+    }
+    h += '</div><div class="card stack"><h3>' + esc(t('ex.batches')) + ' (' + state.batches.length + ')</h3>';
+    if (!state.batches.length) h += '<p class="empty">' + esc(t('ex.noBatches')) + '</p>';
+    else {
+      h += state.batches.slice().reverse().map(function (b) {
+        return '<div class="stack" style="border-top:1px solid var(--line);padding-top:12px"><div class="row" style="justify-content:space-between"><div><strong class="mono">' + esc(b.id) + '</strong><div class="muted small">' + esc(fmtTs(b.createdAt)) + ' · ' + esc(Core.userName(state, b.createdBy)) + ' · ' + esc(t('ex.entries', { n: b.count })) + ' · ' + esc(money(b.total)) + '</div></div></div>' +
+          '<div class="row">' + ['xlsx', 'csv', 'fox', 'json'].map(function (f) { return '<button class="btn sm" data-act="dl" data-fmt="' + f + '" data-id="' + esc(b.id) + '">' + esc(t('ex.dl.' + f)) + '</button>'; }).join('') + '</div></div>';
+      }).join('') + '<p class="muted small">' + esc(t('ex.layoutNote')) + '</p>';
+    }
+    return h + '</div></div>';
+  }
+
+  function vAudit() {
+    var F = ui.auditF, q = F.q.toLowerCase();
+    var all = state.audit.slice().sort(function (a, b) { return a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : (a.id < b.id ? 1 : -1); });
+    var rows = all.filter(function (ev) { return (!F.user || ev.user === F.user) && (!F.action || ev.action === F.action) && (!q || (ev.entryId + ' ' + ev.note + ' ' + detailOf(ev)).toLowerCase().indexOf(q) >= 0); });
+    var shown = rows.slice(0, 200);
+    var acts = ['create', 'edit', 'submit', 'approve', 'reject', 'return', 'reopen', 'export', 'settings', 'reminder'];
+    var h = '<div class="page-head"><h1>' + esc(t('au.title')) + '</h1><button class="btn" data-act="audit-csv">' + esc(t('au.csv')) + '</button></div><div class="stack"><div class="card stack"><div class="row">' +
+      '<select data-audit="user" style="width:auto" aria-label="' + esc(t('au.user')) + '"><option value="">' + esc(t('au.user')) + ': ' + esc(t('au.all')) + '</option>' + state.users.map(function (x) { return '<option value="' + esc(x.id) + '"' + (F.user === x.id ? ' selected' : '') + '>' + esc(x.name) + '</option>'; }).join('') + '</select>' +
+      '<select data-audit="action" style="width:auto" aria-label="' + esc(t('au.action')) + '"><option value="">' + esc(t('au.action')) + ': ' + esc(t('au.all')) + '</option>' + acts.map(function (x) { return '<option value="' + x + '"' + (F.action === x ? ' selected' : '') + '>' + esc(t('act.' + x)) + '</option>'; }).join('') + '</select>' +
+      '<input id="audit-q" data-audit="q" type="search" style="flex:1 1 14rem;width:auto" placeholder="' + esc(t('au.search')) + '" value="' + esc(F.q) + '"></div>' +
+      '<div class="scroll"><table><thead><tr><th>' + esc(t('au.time')) + '</th><th>' + esc(t('au.user')) + '</th><th>' + esc(t('au.action')) + '</th><th>' + esc(t('au.entry')) + '</th><th>' + esc(t('au.detail')) + '</th></tr></thead><tbody id="audit-body">' + auditRows(shown) + '</tbody></table></div><p class="muted small" id="audit-count">' + esc(t('au.showing', { n: shown.length, m: rows.length })) + '</p></div></div>';
+    return h;
+  }
+  function auditRows(list) {
+    if (!list.length) return '<tr><td colspan="5" class="empty">' + esc(t('au.empty')) + '</td></tr>';
+    return list.map(function (ev) { return '<tr><td class="mono" style="white-space:nowrap">' + esc(fmtTs(ev.ts)) + '</td><td>' + esc(Core.userName(state, ev.user)) + '</td><td>' + esc(t('act.' + ev.action)) + '</td><td class="mono">' + esc(ev.entryId) + '</td><td class="small" style="overflow-wrap:anywhere;min-width:14rem">' + esc(detailOf(ev)) + '</td></tr>'; }).join('');
+  }
+
+  function numField(label, path, step) {
+    return '<div class="field"><label>' + esc(label) + '<input type="number" step="' + (step || '0.01') + '" min="0" data-set="' + path + '" data-type="num" value="' + esc(getPath(state.settings, path)) + '"></label></div>';
+  }
+  function vSetup() {
+    var s = state.settings, cfg = s.export, probs = foxProblems(), res = ui.selftest;
+    var delimKey = Object.keys(DELIMS).filter(function (k) { return DELIMS[k] === cfg.delimiter; })[0] || 'comma';
+    var h = '<div class="page-head"><h1>' + esc(t('se.title')) + '</h1></div><div class="stack">';
+    h += '<div class="grid2 even"><div class="card stack"><h3>' + esc(t('se.lang')) + '</h3><div class="seg"><label><input type="radio" name="lang" data-lang="en"' + (lang() === 'en' ? ' checked' : '') + '><span>English</span></label><label><input type="radio" name="lang" data-lang="ms"' + (lang() === 'ms' ? ' checked' : '') + '><span>Bahasa Malaysia</span></label></div>' +
+      '<p class="muted small">' + esc(storageOk ? t('se.storage.ok') : t('se.storage.mem')) + '</p></div>';
+    h += '<div class="card stack"><h3>' + esc(t('se.users')) + '</h3>' + state.users.map(function (x, i) {
+      return '<div class="row"><input type="text" data-user="' + i + '" data-uk="name" value="' + esc(x.name) + '" aria-label="' + esc(t('se.userName')) + '" style="flex:1 1 9rem;width:auto"><select data-user="' + i + '" data-uk="role" style="width:auto" aria-label="' + esc(t('se.userRole')) + '">' + opts(['clerk', 'approver'], x.role, function (r) { return t('role.' + r); }) + '</select></div>';
+    }).join('') + '<div class="row"><input id="new-user" type="text" placeholder="' + esc(t('se.userName')) + '" style="flex:1 1 9rem;width:auto"><button class="btn sm" data-act="user-add">' + esc(t('se.addUser')) + '</button></div></div></div>';
+    h += '<div class="grid2 even"><div class="card stack"><h3>' + esc(t('se.dues')) + '</h3><div class="fields">' + ['EPF', 'SOCSO', 'EIS', 'PCB'].map(function (k) { return '<div class="field"><label>' + esc(k + ' · ' + t('se.dueDay')) + '<input type="number" min="1" max="31" step="1" data-set="dueDays.' + k + '" data-type="int" value="' + esc(s.dueDays[k]) + '"></label></div>'; }).join('') + '</div>' +
+      '<div class="field"><label>' + esc(t('se.roll')) + '<select data-set="rollRule">' + opts(['next', 'prev', 'none'], s.rollRule, function (x) { return t('se.roll.' + x); }) + '</select></label></div></div>';
+    h += '<div class="card stack"><h3>' + esc(t('se.rates')) + '</h3><p class="note warn small">' + esc(t('se.verify')) + '</p><div class="fields">' +
+      numField(t('se.epfLow'), 'rates.epfEmployerLow') + numField(t('se.epfHigh'), 'rates.epfEmployerHigh') + numField(t('se.epfThr'), 'rates.epfThreshold') + numField(t('se.epfEe'), 'rates.epfEmployee') +
+      numField(t('se.socsoEr'), 'rates.socsoEmployer') + numField(t('se.socsoEe'), 'rates.socsoEmployee') + numField(t('se.socsoCap'), 'rates.socsoCeiling') +
+      numField(t('se.eisEr'), 'rates.eisEmployer') + numField(t('se.eisEe'), 'rates.eisEmployee') + numField(t('se.eisCap'), 'rates.eisCeiling') + '</div>' +
+      '<label class="row small"><input type="checkbox" data-set="rates.epfRoundUp" data-type="bool"' + (s.rates.epfRoundUp ? ' checked' : '') + '> ' + esc(t('se.epfRound')) + '</label></div></div>';
+    h += '<div class="card stack"><h3>' + esc(t('se.export')) + '</h3><div class="fields">' +
+      '<div class="field"><label>' + esc(t('se.dateFmt')) + '<select data-set="export.dateFmt">' + opts(['YYYYMMDD', 'DD/MM/YYYY', 'YYYY-MM-DD'], cfg.dateFmt) + '</select></label></div>' +
+      '<div class="field"><label>' + esc(t('se.delim')) + '<select data-set="export.delimiter" data-type="delim">' + opts(Object.keys(DELIMS), delimKey, function (k) { return t('se.delim.' + k); }) + '</select></label></div>' +
+      '<div class="field"><label>' + esc(t('se.decimal')) + '<select data-set="export.decimal"><option value="."' + (cfg.decimal === '.' ? ' selected' : '') + '>' + esc(t('se.dec.dot')) + '</option><option value=","' + (cfg.decimal === ',' ? ' selected' : '') + '>' + esc(t('se.dec.comma')) + '</option></select></label></div></div>' +
+      '<label class="row small"><input type="checkbox" data-set="export.header" data-type="bool"' + (cfg.header ? ' checked' : '') + '> ' + esc(t('se.header')) + '</label>' +
+      '<label class="row small"><input type="checkbox" data-set="export.foxBom" data-type="bool"' + (cfg.foxBom ? ' checked' : '') + '> ' + esc(t('se.bom')) + '</label>' +
+      '<label class="row small"><input type="checkbox" data-set="export.foxUpper" data-type="bool"' + (cfg.foxUpper ? ' checked' : '') + '> ' + esc(t('se.upper')) + '</label>' +
+      '<h3 style="margin-top:6px">' + esc(t('se.map')) + '</h3><p class="muted small">' + esc(t('se.mapNote')) + '</p><div class="scroll"><table><thead><tr><th>' + esc(t('se.mapOn')) + '</th><th>' + esc(t('se.mapName')) + '</th><th>' + esc(t('se.mapSrc')) + '</th><th></th></tr></thead><tbody>' +
+      cfg.map.map(function (m, i) {
+        var bad = probs.some(function (p) { return p.index === i; });
+        return '<tr><td><input type="checkbox" data-map="' + i + '" data-mk="enabled"' + (m.enabled ? ' checked' : '') + ' aria-label="' + esc(t('se.mapOn')) + '"></td><td><input type="text" maxlength="24" data-map="' + i + '" data-mk="name" value="' + esc(m.name) + '" class="mono' + (bad ? ' invalid' : '') + '" style="min-width:8rem" aria-label="' + esc(t('se.mapName')) + '"></td><td><select data-map="' + i + '" data-mk="src" aria-label="' + esc(t('se.mapSrc')) + '">' + opts(Core.SRC_FIELDS, m.src) + '</select></td><td style="white-space:nowrap"><button class="btn sm quiet" data-act="map-up" data-i="' + i + '">' + esc(t('btn.up')) + '</button><button class="btn sm quiet" data-act="map-down" data-i="' + i + '">' + esc(t('btn.down')) + '</button><button class="btn sm quiet" data-act="map-rm" data-i="' + i + '">' + esc(t('btn.remove')) + '</button></td></tr>';
+      }).join('') + '</tbody></table></div>' +
+      (probs.length ? '<div class="note bad small">' + probs.map(function (p) { return esc((p.name || '(blank)') + ': ' + t('se.p.' + p.code)); }).join('<br>') + '</div>' : '<p class="note ok small">' + esc(t('se.mapOk')) + '</p>') +
+      '<div class="row"><button class="btn sm" data-act="map-add">' + esc(t('se.mapAdd')) + '</button><button class="btn sm" data-act="map-reset">' + esc(t('se.mapReset')) + '</button></div></div>';
+    h += '<div class="card stack"><h3>' + esc(t('se.tests')) + '</h3><p class="muted small">' + esc(t('se.testsNote')) + '</p><div><button class="btn primary" data-act="run-tests">' + esc(t('btn.runTests')) + '</button></div>';
+    if (res) {
+      var pass = res.filter(function (r) { return r.pass; }).length;
+      h += '<p class="' + (pass === res.length ? 'pass' : 'fail') + '" id="test-summary">' + esc(t('se.testsSummary', { pass: pass, total: res.length })) + '</p><div class="scroll"><table><thead><tr><th></th><th>Rule</th><th>Check</th></tr></thead><tbody>' +
+        res.map(function (r) { return '<tr><td class="' + (r.pass ? 'pass' : 'fail') + '">' + (r.pass ? 'PASS' : 'FAIL') + '</td><td class="mono">' + esc(r.group) + '</td><td>' + esc(r.name) + (r.detail ? '<div class="fail small">' + esc(r.detail) + '</div>' : '') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+    }
+    h += '<h3 style="margin-top:8px">' + esc(t('se.manual')) + '</h3><ol class="small" style="margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:4px">' + [1, 2, 3, 4, 5, 6, 7].map(function (n) { return '<li>' + esc(t('man.' + n)) + '</li>'; }).join('') + '</ol></div>';
+    h += '<div class="card stack"><h3>' + esc(t('se.data')) + '</h3><p class="muted small">' + esc(t('se.dataNote')) + '</p><div class="row">' +
+      (ui.confirmReset ? '<button class="btn danger" data-act="reset-confirm">' + esc(t('btn.confirmReset')) + '</button><button class="btn" data-act="reset-cancel">' + esc(t('btn.cancel')) + '</button>' : '<button class="btn danger" data-act="reset">' + esc(t('btn.reset')) + '</button>') + '</div></div></div>';
+    return h;
+  }
+
+  var VIEWS = { dashboard: vDashboard, inbox: vInbox, entry: vEntry, approvals: vApprovals, compliance: vCompliance, export: vExport, audit: vAudit, setup: vSetup };
+
+  /* ---------- chrome and render ---------- */
+  function counts() {
+    var today = Core.todayLocal(), s = Core.dashboardStats(state, today);
+    return { inbox: s.inbox, approvals: s.submitted, compliance: s.overdue };
+  }
+  function renderChrome() {
+    var u = me(), c = counts();
+    document.documentElement.lang = lang() === 'ms' ? 'ms' : 'en';
+    $('#brand-name').textContent = t('app.name'); $('#brand-sub').textContent = t('app.sub'); $('#who-label').textContent = t('who');
+    var sel = $('#user-select'); sel.innerHTML = state.users.map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.name) + '</option>'; }).join(''); sel.value = u.id;
+    var rp = $('#role-pill'); rp.textContent = t('role.' + u.role); rp.className = 'role ' + u.role;
+    $('#lang-btn').textContent = t('lang.btn');
+    function badge(id) { return c[id] ? '<span class="badge' + (id === 'compliance' ? ' warn' : '') + '">' + c[id] + '</span>' : ''; }
+    $('#tabs').innerHTML = TABS.map(function (x) { return '<button data-act="go" data-tab="' + x[0] + '"' + (ui.tab === x[0] ? ' aria-current="page"' : '') + '>' + icon(x[2]) + esc(t(x[1])) + badge(x[0]) + '</button>'; }).join('');
+    var inMore = PRIMARY.indexOf(ui.tab) < 0;
+    $('#bottom').innerHTML = TABS.filter(function (x) { return PRIMARY.indexOf(x[0]) >= 0; }).map(function (x) { return '<button data-act="go" data-tab="' + x[0] + '"' + (ui.tab === x[0] ? ' aria-current="page"' : '') + '>' + icon(x[2]) + '<span>' + esc(t(x[1])) + '</span>' + badge(x[0]) + '</button>'; }).join('') +
+      '<button data-act="more"' + (inMore ? ' aria-current="page"' : '') + ' aria-expanded="' + ui.moreOpen + '">' + icon('more') + '<span>' + esc(t('nav.more')) + '</span></button>';
+    var ms = $('#more-sheet'); ms.hidden = !ui.moreOpen;
+    ms.innerHTML = TABS.filter(function (x) { return PRIMARY.indexOf(x[0]) < 0; }).map(function (x) { return '<button data-act="go" data-tab="' + x[0] + '">' + icon(x[2]) + esc(t(x[1])) + badge(x[0]) + '</button>'; }).join('');
+  }
+  function render() {
+    renderChrome();
+    var v = $('#view'), keepScroll = window.pageYOffset;
+    v.innerHTML = VIEWS[ui.tab]();
+    if (ui.tab === 'entry') refreshEntryHints();
+    renderDrawer();
+    window.scrollTo(0, keepScroll);
+  }
+  function setTab(tab) {
+    ui.tab = tab; ui.moreOpen = false;
+    try { location.hash = tab; } catch (e) { /* ignore */ }
+    save(); render(); window.scrollTo(0, 0);
+  }
+
+  /* ---------- downloads ---------- */
+  function getDl() {
+    if (dlCap !== undefined) return Promise.resolve(dlCap);
+    if (!(window.claude && window.claude.use)) { dlCap = null; return Promise.resolve(null); }
+    return window.claude.use('downloads').then(function (d) { dlCap = d || null; return dlCap; }, function () { dlCap = null; return null; });
+  }
+  function deliver(name, data) {
+    return getDl().then(function (dl) {
+      if (dl) {
+        return dl.save({ filename: name, data: data }).then(function () { toast(t('ex.saved', { name: name })); }, function (err) {
+          var c = err && err.code;
+          if (c === 'declined') { toast(t('ex.cancelled')); return; }
+          if (c === 'rate_limited') { toast(t('ex.busy'), true); return; }
+          fallbackSave(name, data);
+        });
+      }
+      fallbackSave(name, data);
+    });
+  }
+  function fallbackSave(name, data) {
+    if (window.claude) {
+      if (typeof data === 'string') { ui.copyDlg = { filename: name, text: data }; renderDrawer(); }
+      toast(t('ex.unavailable'), true); return;
+    }
+    try {
+      var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data], { type: 'application/octet-stream' })); a.download = name;
+      document.body.appendChild(a); a.click(); a.parentNode.removeChild(a); toast(t('ex.saved', { name: name }));
+    } catch (e) { toast(t('ex.unavailable'), true); }
+  }
+  function buildXlsx(batch) {
+    var cfg = state.settings.export, ctx = Core.ctxFor(state), X = window.XLSX;
+    var g = Core.buildTable(batch.snapshot, 'generic', cfg, ctx), f = Core.buildTable(batch.snapshot, 'fox', cfg, ctx);
+    var wb = X.utils.book_new(), w1 = X.utils.aoa_to_sheet([g.header].concat(g.rows)), w2 = X.utils.aoa_to_sheet([f.header].concat(f.rows));
+    w1['!cols'] = g.header.map(function (h, i) { return { wch: [10, 12, 9, 10, 28, 16, 34, 20, 12, 10, 12, 8, 8, 14, 16, 16, 12, 14][i] || 12 }; });
+    X.utils.book_append_sheet(wb, w1, 'Entries'); X.utils.book_append_sheet(wb, w2, 'FoxPro layout');
+    return new Uint8Array(X.write(wb, { bookType: 'xlsx', type: 'array' }));
+  }
+  function download(fmt, batchId) {
+    var batch = state.batches.filter(function (b) { return b.id === batchId; })[0];
+    if (!batch) return;
+    var cfg = state.settings.export, ctx = Core.ctxFor(state), tb;
+    if (fmt === 'json') return deliver(batch.id + '.json', Core.buildJSON(state, batch));
+    if (fmt === 'fox') {
+      if (foxProblems().length) { toast(t('ex.fixLayout'), true); return; }
+      tb = Core.buildTable(batch.snapshot, 'fox', cfg, ctx);
+      return deliver(batch.id + '_foxpro.' + (cfg.delimiter === '\t' ? 'txt' : 'csv'), (cfg.foxBom ? '﻿' : '') + Core.toDelimited(tb, { delimiter: cfg.delimiter, decimal: cfg.decimal, header: cfg.header }));
+    }
+    if (fmt === 'xlsx' && window.XLSX) {
+      try { return deliver(batch.id + '.xlsx', buildXlsx(batch)); } catch (e) { /* fall back to CSV */ }
+    }
+    if (fmt === 'xlsx') toast(t('ex.xlsxMissing'), true);
+    tb = Core.buildTable(batch.snapshot, 'generic', cfg, ctx);
+    return deliver(batch.id + '_generic.csv', '﻿' + Core.toDelimited(tb, { delimiter: ',', decimal: '.', header: true, neutralise: true }));
+  }
+
+  /* ---------- simulated extraction hook ---------- */
+  /* Replace the body with a call to your OCR/AI service. Resolve the same shape as Core.simulateExtract. */
+  function extractFromDocument(file) {
+    return sleep(350).then(function () { return Core.simulateExtract(file.name, Core.todayLocal()); });
+  }
+
+  /* ---------- actions ---------- */
+  function addFiles(files, source) {
+    var n = 0, skipped = 0;
+    Array.prototype.forEach.call(files, function (f) {
+      if (!/\.(pdf|jpe?g|png|gif|webp)$/i.test(f.name) && !/^image\//.test(f.type)) { skipped++; return; }
+      var meta = { name: f.name, size: f.size, type: f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : 'image/jpeg') };
+      var e = Core.addInboxItem(state, me(), { source: source, attachments: [meta] });
+      var url = ''; try { url = URL.createObjectURL(f); } catch (x) { /* ignore */ }
+      blobStore[e.id] = [{ name: meta.name, size: meta.size, type: meta.type, url: url }];
+      n++;
+    });
+    commit(n ? t('inbox.title') + ': +' + n : '');
+    if (skipped) toast(skipped + ' file(s) skipped: PDF, JPG or PNG only.', true);
+  }
+  function closeDrawer() { ui.drawerId = null; ui.copyDlg = null; renderDrawer(); }
+  var A = {
+    go: function (el) {
+      if (el.getAttribute('data-filter')) { ui.apFilter = el.getAttribute('data-filter'); }
+      setTab(el.getAttribute('data-tab'));
+    },
+    more: function () { ui.moreOpen = !ui.moreOpen; renderChrome(); },
+    lang: function () { state.settings.lang = lang() === 'en' ? 'ms' : 'en'; commit(); },
+    'open-drawer': function (el) { ui.drawerId = el.getAttribute('data-id'); ui.copyDlg = null; renderDrawer(); },
+    'close-drawer': closeDrawer,
+    'open-entry': function (el) {
+      var e = Core.findEntry(state, el.getAttribute('data-id'));
+      openEntry(e.id, null, e.status === 'inbox' && e.rawText ? 'inbox.fromText' : '');
+    },
+    'new-entry': function () { ui.entryNote = ''; ui.entryId = null; ui.entryDraft = blankDraft(); ui.attach = []; render(); },
+    extract: function (el) {
+      var e = Core.findEntry(state, el.getAttribute('data-id'));
+      el.disabled = true;
+      extractFromDocument(e.attachments[0]).then(function (r) {
+        if (!r.matched) { openEntry(e.id, null, ''); toast(t('inbox.noMatch'), true); return; }
+        openEntry(e.id, { type: r.type, payee: r.payee, category: r.category, netAmount: r.netAmount, taxAmount: r.taxAmount, description: r.description, docDate: r.docDate }, 'inbox.sim');
+      });
+    },
+    'add-paste': function () {
+      if (!ui.pasteText.trim()) return;
+      var p = Core.parsePasted(ui.pasteText);
+      Core.addInboxItem(state, me(), { source: ui.pasteSource, rawText: ui.pasteText.trim(), payee: p.payee, refNo: p.refNo, docDate: p.date || '', netAmount: p.amount || 0, taxAmount: 0, type: p.type });
+      ui.pasteText = ''; commit(t('btn.addInbox'));
+    },
+    'rm-attach': function (el) { ui.attach.splice(+el.getAttribute('data-i'), 1); $('#attach-list').innerHTML = attachHTML(ui.attach); },
+    'save-entry': function () {
+      try { var e = persistEntry(); commit(t('entry.saved', { id: e.id })); } catch (err) { showErr(err); }
+    },
+    'submit-entry': function () {
+      var e;
+      try { e = persistEntry(); } catch (err) { showErr(err); return; }
+      var w = Core.entryWarnings(e, state), reason = '';
+      if (w.duplicates.length) {
+        var ok = $('#f-dupok') && $('#f-dupok').checked; reason = val('#f-dupreason');
+        if (!ok || !reason) { save(); refreshEntryHints(); $('#dup-err').textContent = t('ce.DUPLICATE'); var tgt = ok ? $('#f-dupreason') : $('#f-dupok'); if (tgt) tgt.focus(); return; }
+      }
+      try {
+        Core.submitEntry(state, me(), e.id, { dupReason: reason });
+        ui.entryId = null; ui.entryDraft = null; ui.attach = []; ui.entryNote = '';
+        commit(t('entry.submitted', { id: e.id }));
+      } catch (err) {
+        if (err && err.code === 'VALIDATION') { save(); showFieldErrors(err.extra.errors); } else showErr(err);
+      }
+    },
+    'ap-filter': function (el) { ui.apFilter = el.getAttribute('data-v'); render(); },
+    approve: function (el) {
+      var id = el.getAttribute('data-id');
+      try { Core.approveEntry(state, me(), id, { balanceReason: val('#d-balance') }); ui.drawerId = null; commit(t('ap.approved.ok', { id: id })); }
+      catch (err) { showErr(err, '#drawer-msg'); if (err.code === 'BALANCE_OVERRIDE_REQUIRED' && $('#d-balance')) $('#d-balance').focus(); }
+    },
+    reject: function (el) {
+      var id = el.getAttribute('data-id');
+      try { Core.rejectEntry(state, me(), id, val('#d-reject')); ui.drawerId = null; commit(t('ap.rejected.ok', { id: id })); } catch (err) { showErr(err, '#drawer-msg'); }
+    },
+    'return': function (el) {
+      var id = el.getAttribute('data-id'), e = Core.findEntry(state, id);
+      try { Core.returnEntry(state, me(), id, val('#d-return')); ui.drawerId = null; commit(t('ap.returned.ok', { id: id, name: Core.userName(state, e.createdBy) })); } catch (err) { showErr(err, '#drawer-msg'); }
+    },
+    reopen: function (el) {
+      var id = el.getAttribute('data-id');
+      try { Core.reopenEntry(state, me(), id, val('#d-reopen')); ui.drawerId = null; commit(t('ap.reopened.ok', { id: id })); } catch (err) { showErr(err, '#drawer-msg'); }
+    },
+    'rem-filter': function (el) { ui.remFilter = el.getAttribute('data-v'); render(); },
+    'rem-done-open': function (el) { ui.remDoneId = el.getAttribute('data-id'); render(); },
+    'rem-done-cancel': function () { ui.remDoneId = null; render(); },
+    'rem-done-save': function (el) {
+      try { Core.markReminderDone(state, me(), el.getAttribute('data-id'), val('#rd-ref'), num(val('#rd-amt'))); ui.remDoneId = null; commit(t('co.marked')); } catch (err) { showErr(err); }
+    },
+    'rem-pay': function (el) {
+      var r = state.reminders.filter(function (x) { return x.id === el.getAttribute('data-id'); })[0];
+      openEntry(null, { type: 'payment', payee: KIND_PAYEE[r.kind] || '', description: r.title, category: r.kind === 'CUSTOM' ? '' : 'Statutory contributions', netAmount: r.amount || '', docDate: Core.todayLocal(), source: 'other' });
+    },
+    'rem-tpl': function (el) { ui.remTitle = t(el.getAttribute('data-k')); var i = $('#rem-title'); if (i) { i.value = ui.remTitle; i.focus(); } },
+    'rem-add': function () {
+      var title = val('#rem-title'), due = val('#rem-date');
+      if (!title || !Core.parseISO(due)) { toast(t('err.required') + ': ' + t('co.custom') + ', ' + t('co.date'), true); return; }
+      Core.addReminder(state, me(), { kind: 'CUSTOM', title: title, due: due }); ui.remTitle = ''; commit(t('co.added'));
+    },
+    'rem-gen': function () {
+      var p = ui.genPeriod; if (!/^\d{4}-\d{2}$/.test(p)) { toast(t('err.required') + ': ' + t('co.wage'), true); return; }
+      var made = Core.generateStatutory(state, me(), p);
+      commit(made.length ? t('co.genDone', { n: made.length, period: p }) : t('co.genNone', { period: p }));
+    },
+    'pay-add': function () { ui.payRows.push({ name: '', wage: 0, pcb: 0 }); render(); },
+    'pay-rm': function (el) { ui.payRows.splice(+el.getAttribute('data-i'), 1); render(); },
+    'pay-entries': function () {
+      var res = Core.calcPayroll(ui.payRows.map(function (r) { return { name: r.name, wage: num(r.wage), pcb: num(r.pcb) }; }), state.settings.rates);
+      var ps = Core.payrollEntryPatches(res, ui.payPeriod, Core.todayLocal());
+      ps.forEach(function (p) { Core.saveEntry(state, me(), p); });
+      commit(t('co.paid', { n: ps.length }));
+    },
+    'toggle-sel': function (el) { var id = el.getAttribute('data-id'); ui.exportSel[id] = !ui.exportSel[id]; render(); },
+    'sel-all': function (el) {
+      var ready = state.entries.filter(function (e) { return e.status === 'approved' && !e.exportBatchId; });
+      ui.exportSel = {}; if (el.checked) ready.forEach(function (e) { ui.exportSel[e.id] = true; }); render();
+    },
+    'ex-layout': function (el) { ui.exportLayout = el.getAttribute('data-v'); render(); },
+    'create-batch': function () {
+      var ids = state.entries.filter(function (e) { return ui.exportSel[e.id]; }).map(function (e) { return e.id; });
+      try { var b = Core.createBatch(state, me(), ids); ui.exportSel = {}; commit(t('ex.batchMade', { id: b.id })); } catch (err) { showErr(err); }
+    },
+    dl: function (el) { download(el.getAttribute('data-fmt'), el.getAttribute('data-id')); },
+    'copy-text': function () {
+      var ta = $('#copy-text'); ta.select();
+      var done = function () { toast(t('ex.copied')); }, failed = function () { toast(t('ex.copyFail'), true); };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(done, failed); else failed();
+    },
+    'audit-csv': function () {
+      var rows = state.audit.slice().sort(function (a, b) { return a.ts < b.ts ? 1 : -1; }).map(function (ev) { return [ev.id, ev.ts, Core.userName(state, ev.user), ev.action, ev.entryId, detailOf(ev)]; });
+      deliver('audit-log.csv', '﻿' + Core.toDelimited({ header: ['Event', 'Time (UTC)', 'User', 'Action', 'Entry', 'Detail'], rows: rows }, { neutralise: true }));
+    },
+    'run-tests': function () { ui.selftest = Core.runSelfTests(Core.todayLocal()); render(); var s = $('#test-summary'); if (s) s.scrollIntoView({ block: 'center' }); },
+    reset: function () { ui.confirmReset = true; render(); },
+    'reset-cancel': function () { ui.confirmReset = false; render(); },
+    'reset-confirm': function () {
+      var l = state.settings.lang; state = Core.seedState(Core.todayLocal()); state.settings.lang = l;
+      blobStore = {}; ui.entryId = null; ui.entryDraft = null; ui.attach = []; ui.exportSel = {}; ui.confirmReset = false; ui.drawerId = null; ui.selftest = null;
+      commit(t('se.reset.ok'));
+    },
+    'user-add': function () {
+      var name = val('#new-user'); if (!name) return;
+      var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '') || 'user'; while (Core.userById(state, id)) id += '2';
+      state.users.push({ id: id, name: name, role: 'clerk' });
+      Core.audit(state, me(), 'settings', '', null, { user: name, role: 'clerk' }, 'team member added'); commit(t('se.changed'));
+    },
+    'map-add': function () { state.settings.export.map.push({ name: 'NEWFIELD', src: 'id', enabled: true }); commit(); },
+    'map-reset': function () { state.settings.export.map = Core.defaultFoxMap(); Core.audit(state, me(), 'settings', '', null, null, 'FoxPro field mapping reset'); commit(t('se.changed')); },
+    'map-rm': function (el) { state.settings.export.map.splice(+el.getAttribute('data-i'), 1); Core.audit(state, me(), 'settings', '', null, null, 'FoxPro field removed'); commit(); },
+    'map-up': function (el) { moveMap(+el.getAttribute('data-i'), -1); },
+    'map-down': function (el) { moveMap(+el.getAttribute('data-i'), 1); }
+  };
+  function moveMap(i, d) {
+    var m = state.settings.export.map, j = i + d; if (j < 0 || j >= m.length) return;
+    var x = m[i]; m[i] = m[j]; m[j] = x; Core.audit(state, me(), 'settings', '', null, null, 'FoxPro field order changed'); commit();
+  }
+
+  /* ---------- events ---------- */
+  document.addEventListener('click', function (ev) {
+    var el = ev.target.closest ? ev.target.closest('[data-act]') : null;
+    if (ev.target.id === 'scrim') { closeDrawer(); return; }
+    if (!el) return;
+    var fn = A[el.getAttribute('data-act')];
+    if (fn) { if (el.tagName === 'INPUT') { fn(el); return; } fn(el); }
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape' && (ui.drawerId || ui.copyDlg)) { closeDrawer(); return; }
+    if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('[data-act][tabindex]') && ev.target.tagName !== 'BUTTON') { ev.preventDefault(); ev.target.click(); }
+  });
+  document.addEventListener('input', function (ev) {
+    var el = ev.target, f = el.getAttribute && el.getAttribute('data-f');
+    if (f && ui.entryDraft) {
+      ui.entryDraft[f] = el.value;
+      if (el.classList) el.classList.remove('invalid');
+      var er = $('#err-' + f); if (er) er.textContent = '';
+      refreshEntryHints(); return;
+    }
+    if (el.id === 'paste-text') { ui.pasteText = el.value; $('#paste-result').innerHTML = pasteResultHTML(); return; }
+    if (el.id === 'rem-title') { ui.remTitle = el.value; return; }
+    if (el.classList && el.classList.contains('pay-in')) {
+      var r = ui.payRows[+el.getAttribute('data-i')], k = el.getAttribute('data-k');
+      r[k] = k === 'name' ? el.value : el.value; $('#pay-results').innerHTML = payResultsHTML(); return;
+    }
+    var da = el.getAttribute && el.getAttribute('data-audit');
+    if (da) { ui.auditF[da] = el.value; if (da === 'q') { rerenderAuditBody(); } }
+  });
+  function rerenderAuditBody() {
+    var F = ui.auditF, q = F.q.toLowerCase();
+    var rows = state.audit.slice().sort(function (a, b) { return a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : (a.id < b.id ? 1 : -1); }).filter(function (ev) { return (!F.user || ev.user === F.user) && (!F.action || ev.action === F.action) && (!q || (ev.entryId + ' ' + ev.note + ' ' + detailOf(ev)).toLowerCase().indexOf(q) >= 0); });
+    var shown = rows.slice(0, 200);
+    $('#audit-body').innerHTML = auditRows(shown); $('#audit-count').textContent = t('au.showing', { n: shown.length, m: rows.length });
+  }
+  document.addEventListener('change', function (ev) {
+    var el = ev.target;
+    if (el.id === 'user-select') { ui.userId = el.value; commit(); return; }
+    if (el.id === 'file-input') { addFiles(el.files, ui.uploadSource); el.value = ''; return; }
+    if (el.id === 'f-files') {
+      Array.prototype.forEach.call(el.files, function (f) { var url = ''; try { url = URL.createObjectURL(f); } catch (x) { /* ignore */ } ui.attach.push({ name: f.name, size: f.size, type: f.type || '', url: url }); });
+      $('#attach-list').innerHTML = attachHTML(ui.attach); el.value = ''; return;
+    }
+    var du = el.getAttribute('data-ui'); if (du) { ui[du] = el.value; return; }
+    var da = el.getAttribute('data-audit'); if (da) { ui.auditF[da] = el.value; if (da !== 'q') render(); return; }
+    if (el.getAttribute('data-lang')) { state.settings.lang = el.getAttribute('data-lang'); commit(); return; }
+    var ds = el.getAttribute('data-set');
+    if (ds) {
+      var type = el.getAttribute('data-type'), nv = el.value;
+      if (type === 'bool') nv = el.checked; else if (type === 'num') nv = Math.max(0, num(nv)); else if (type === 'int') nv = Math.min(31, Math.max(1, Math.floor(num(nv)))); else if (type === 'delim') nv = DELIMS[nv];
+      var old = getPath(state.settings, ds); setPath(state.settings, ds, nv);
+      var b = {}, a = {}; b[ds] = old; a[ds] = nv; Core.audit(state, me(), 'settings', '', b, a, ''); commit(t('se.changed')); return;
+    }
+    var mi = el.getAttribute('data-map');
+    if (mi !== null) {
+      var m = state.settings.export.map[+mi], k = el.getAttribute('data-mk'), ov = m[k];
+      m[k] = k === 'enabled' ? el.checked : k === 'name' ? el.value.trim().toUpperCase() : el.value;
+      var bb = {}, aa = {}; bb['map.' + mi + '.' + k] = ov; aa['map.' + mi + '.' + k] = m[k]; Core.audit(state, me(), 'settings', '', bb, aa, ''); commit(); return;
+    }
+    var ui2 = el.getAttribute('data-user');
+    if (ui2 !== null) {
+      var u = state.users[+ui2], uk = el.getAttribute('data-uk'), val2 = el.value.trim(); if (uk === 'name' && !val2) { el.value = u.name; return; }
+      var b3 = {}, a3 = {}; b3[u.id + '.' + uk] = u[uk]; u[uk] = val2; a3[u.id + '.' + uk] = val2; Core.audit(state, me(), 'settings', '', b3, a3, ''); commit(t('se.changed'));
+    }
+  });
+  document.addEventListener('dragover', function (ev) { var d = ev.target.closest ? ev.target.closest('#drop') : null; if (d) { ev.preventDefault(); d.classList.add('over'); } });
+  document.addEventListener('dragleave', function (ev) { var d = ev.target.closest ? ev.target.closest('#drop') : null; if (d) d.classList.remove('over'); });
+  document.addEventListener('drop', function (ev) {
+    var d = ev.target.closest ? ev.target.closest('#drop') : null;
+    if (d) { ev.preventDefault(); d.classList.remove('over'); if (ev.dataTransfer && ev.dataTransfer.files.length) addFiles(ev.dataTransfer.files, ui.uploadSource); }
+  });
+  $('#lang-btn').addEventListener('click', A.lang);
+
+  /* ---------- start ---------- */
+  loadAll();
+  ui.payPeriod = prevMonth(); ui.genPeriod = prevMonth();
+  getDl();
+  render();
+
+})();
+
+</script>
