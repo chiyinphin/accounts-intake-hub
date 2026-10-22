@@ -5,6 +5,7 @@
   "description": "Single-file accounts intake app for a law-firm accounts team: capture, maker/checker approval, statutory reminders, FoxPro/Excel/CSV export.",
   "scripts": {
     "build": "node scripts/build.js --prod",
+    "build:artifact": "node scripts/build.js --prod --fragment .build/artifact.html",
     "build:test": "node scripts/build.js",
     "test:core": "node scripts/test.js",
     "test:i18n": "node scripts/i18ncheck.js",

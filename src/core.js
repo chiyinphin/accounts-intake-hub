@@ -119,6 +119,7 @@ var Core = (function () {
     return {
       lang: 'en',
       rollRule: 'next',
+      weekStart: 1, // calendar week starts on Monday (1) or Sunday (0)
       dueDays: { EPF: 15, SOCSO: 15, EIS: 15, PCB: 15 },
       rates: {
         epfEmployerLow: 13, epfEmployerHigh: 12, epfThreshold: 5000, epfEmployee: 11, epfRoundUp: true,
@@ -578,6 +579,137 @@ var Core = (function () {
     return r;
   }
 
+  /* ---------- calendar ---------- */
+  var CAL_LAYERS = ['deadlines', 'documents', 'approvals', 'exports'];
+  var LAYER_RANK = { deadlines: 0, documents: 1, approvals: 2, exports: 3 };
+  var DL_RANK = { overdue: 0, soon: 1, upcoming: 2, done: 3 };
+  function normWeekStart(w) { return Number(w) === 0 ? 0 : 1; }
+  /* Rows of 7 days covering the month of ym (YYYY-MM), padded with the neighbouring months' days. */
+  function monthGrid(ym, weekStart) {
+    var ws = normWeekStart(weekStart), first = ym + '-01', dow = parseISO(first).getUTCDay();
+    var lead = (dow - ws + 7) % 7, start = addDays(first, -lead);
+    var dim = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate();
+    var weeks = Math.ceil((lead + dim) / 7), rows = [];
+    for (var w = 0; w < weeks; w++) {
+      var row = [];
+      for (var d = 0; d < 7; d++) {
+        var iso = addDays(start, w * 7 + d);
+        row.push({ date: iso, inMonth: iso.slice(0, 7) === ym, dow: parseISO(iso).getUTCDay() });
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+  function weekDays(iso, weekStart) {
+    var ws = normWeekStart(weekStart), lead = (parseISO(iso).getUTCDay() - ws + 7) % 7, start = addDays(iso, -lead), out = [];
+    for (var i = 0; i < 7; i++) out.push(addDays(start, i));
+    return out;
+  }
+  /* Move by whole months, keeping the day of month where it exists (31 Jan + 1 month = 28/29 Feb). */
+  function shiftMonth(iso, n) {
+    var y = +iso.slice(0, 4), m = +iso.slice(5, 7) - 1 + n, d = +iso.slice(8, 10);
+    y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+    var dim = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return y + '-' + pad(m + 1) + '-' + pad(Math.min(d, dim));
+  }
+  function monthBounds(ym) {
+    return { from: ym + '-01', to: ym + '-' + pad(new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate()) };
+  }
+  /* One flat, sorted list of calendar items from the existing data. Nothing is stored; it is derived on demand.
+     o: { from, to, layers: {deadlines, documents, approvals, exports}, ledger: 'all' | 'office' | 'client' } */
+  function calendarEvents(state, today, o) {
+    o = o || {};
+    var from = o.from || '', to = o.to || '', ledger = o.ledger || 'all', out = [];
+    var on = o.layers || { deadlines: true, documents: true, approvals: true, exports: true };
+    function inRange(d) { return !!d && (!from || d >= from) && (!to || d <= to); }
+    if (on.deadlines) state.reminders.forEach(function (r) {
+      if (!inRange(r.due)) return;
+      var st = reminderStatus(r, today);
+      out.push({ id: 'dl:' + r.id, layer: 'deadlines', date: r.due, kind: r.kind, status: st, title: r.title,
+        short: r.kind === 'CUSTOM' ? r.title : r.kind + (r.period ? ' ' + r.period : ''), reminderId: r.id, rank: DL_RANK[st] });
+    });
+    state.entries.forEach(function (e) {
+      if (ledger !== 'all' && (e.ledger !== ledger || e.status === 'inbox')) return; // inbox items are not filed to a ledger yet
+      var title = e.payee || (e.attachments && e.attachments[0] && e.attachments[0].name) || '';
+      if (on.documents) {
+        var d = e.docDate || localDateOf(e.createdAt);
+        if (inRange(d)) out.push({ id: 'doc:' + e.id, layer: 'documents', date: d, kind: e.type, status: e.status, title: title, source: e.source,
+          entryId: e.id, ledger: e.ledger, amount: e.totalAmount, rank: 0 });
+      }
+      if (on.approvals && e.approvedAt && (e.status === 'approved' || e.status === 'exported')) {
+        var a = localDateOf(e.approvedAt);
+        if (inRange(a)) out.push({ id: 'apr:' + e.id, layer: 'approvals', date: a, kind: e.type, status: e.status, title: title, source: e.source,
+          entryId: e.id, ledger: e.ledger, amount: e.totalAmount, by: e.approvedBy, at: e.approvedAt, rank: 0 });
+      }
+    });
+    if (on.exports) state.batches.forEach(function (b) {
+      var d = localDateOf(b.createdAt);
+      if (!inRange(d)) return;
+      var snap = ledger === 'all' ? b.snapshot : b.snapshot.filter(function (x) { return x.ledger === ledger; });
+      if (!snap.length) return;
+      var total = 0; snap.forEach(function (x) { total += x.totalAmount; });
+      out.push({ id: 'bat:' + b.id, layer: 'exports', date: d, kind: 'batch', status: 'exported', title: b.id, batchId: b.id,
+        count: snap.length, amount: round2(total), by: b.createdBy, at: b.createdAt, rank: 0 });
+    });
+    out.sort(function (a, b) {
+      return a.date < b.date ? -1 : a.date > b.date ? 1 : (LAYER_RANK[a.layer] - LAYER_RANK[b.layer]) || (a.rank - b.rank) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    });
+    return out;
+  }
+  /* Figures for the strip above the calendar. Overdue and next-7-days ignore the visible month on purpose. */
+  function calendarSummary(state, today, ym) {
+    var s = { overdue: 0, overdueFirst: '', next7: 0, next7First: '', monthOpen: 0, monthDone: 0, monthDocs: 0, approvedCount: 0, approvedTotal: 0 };
+    var b = monthBounds(ym);
+    state.reminders.forEach(function (r) {
+      var st = reminderStatus(r, today);
+      if (st === 'overdue') { s.overdue++; if (!s.overdueFirst || r.due < s.overdueFirst) s.overdueFirst = r.due; }
+      if (st === 'soon') { s.next7++; if (!s.next7First || r.due < s.next7First) s.next7First = r.due; }
+      if (r.due >= b.from && r.due <= b.to) { if (r.status === 'done') s.monthDone++; else s.monthOpen++; }
+    });
+    state.entries.forEach(function (e) {
+      if (e.status !== 'inbox' && e.docDate >= b.from && e.docDate <= b.to) s.monthDocs++;
+      if ((e.status === 'approved' || e.status === 'exported') && e.approvedAt) {
+        var a = localDateOf(e.approvedAt);
+        if (a >= b.from && a <= b.to) { s.approvedCount++; s.approvedTotal = round2(s.approvedTotal + e.totalAmount); }
+      }
+    });
+    return s;
+  }
+  /* iCalendar (RFC 5545). Open deadlines only: no amounts, payees or matter numbers leave the app. */
+  function icsEscape(s) {
+    return String(s === null || s === undefined ? '' : s).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+      .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n');
+  }
+  function icsFold(line) {
+    var out = [], cur = '', len = 0;
+    Array.from(line).forEach(function (ch) {
+      var c = ch.codePointAt(0), n = c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4;
+      if (len + n > 75) { out.push(cur); cur = ' ' + ch; len = 1 + n; } else { cur += ch; len += n; }
+    });
+    out.push(cur);
+    return out.join('\r\n');
+  }
+  function buildICS(state, o) {
+    o = o || {};
+    var L = o.labels || {}, stamp = nowISO().replace(/[-:]|\.\d{3}/g, '');
+    var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Accounts Intake Hub//Deadlines//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'X-WR-CALNAME:' + icsEscape(L.calName || 'Accounts Intake Hub deadlines')];
+    var open = state.reminders.filter(function (r) { return r.status !== 'done' && parseISO(r.due); })
+      .sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : (a.id < b.id ? -1 : 1); });
+    open.forEach(function (r) {
+      var d0 = r.due.replace(/-/g, ''), d1 = addDays(r.due, 1).replace(/-/g, '');
+      var desc = (r.kind === 'CUSTOM' ? (L.custom || 'Reminder') : (L.statutory || 'Statutory deadline') + ' (' + r.kind + ')') + (r.period ? '. ' + (L.wage || 'Wage month') + ' ' + r.period : '');
+      lines.push('BEGIN:VEVENT', 'UID:' + r.id + '@accounts-intake-hub', 'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + d0, 'DTEND;VALUE=DATE:' + d1,
+        'SUMMARY:' + icsEscape(r.title), 'DESCRIPTION:' + icsEscape(desc), 'CATEGORIES:' + icsEscape(r.kind === 'CUSTOM' ? 'Reminder' : 'Statutory'),
+        'TRANSP:TRANSPARENT',
+        'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEscape(r.title), 'TRIGGER:-P2DT15H', 'END:VALARM', // 09:00, three days before
+        'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEscape(r.title), 'TRIGGER:PT9H', 'END:VALARM', // 09:00 on the day
+        'END:VEVENT');
+    });
+    lines.push('END:VCALENDAR');
+    return { text: lines.map(icsFold).join('\r\n') + '\r\n', count: open.length };
+  }
+
   /* ---------- dashboard ---------- */
   function dashboardStats(state, today) {
     var ym = today.slice(0, 7);
@@ -1023,6 +1155,92 @@ var Core = (function () {
       return eq([s.inbox, s.submitted, s.overdue, s.soon], [3, 4, 1, 1]);
     });
 
+    t('Calendar', 'Month grid starts on the chosen weekday and covers the month (Oct 2026)', function () {
+      var m = monthGrid('2026-10', 1), s = monthGrid('2026-10', 0);
+      return eq([m.length, m[0][0].date, m[4][6].date, s.length, s[0][0].date, s[4][6].date], [5, '2026-09-28', '2026-11-01', 5, '2026-09-27', '2026-10-31']);
+    });
+    t('Calendar', 'Month grid height varies from 4 to 6 rows (Feb 2026 Sun/Mon start, Mar 2026 Mon start)', function () {
+      return eq([monthGrid('2026-02', 0).length, monthGrid('2026-02', 1).length, monthGrid('2026-03', 1).length], [4, 5, 6]);
+    });
+    t('Calendar', 'Week days follow the week start; week start defaults to Monday', function () {
+      var mon = weekDays('2026-10-22', 1), sun = weekDays('2026-10-22', 0);
+      return eq([mon[0], mon[6], sun[0], sun[6], defaultSettings().weekStart, normWeekStart('0'), normWeekStart(undefined)],
+        ['2026-10-19', '2026-10-25', '2026-10-18', '2026-10-24', 1, 0, 1]);
+    });
+    t('Calendar', 'Month shift clamps the day and rolls the year', function () {
+      return eq([shiftMonth('2026-01-31', 1), shiftMonth('2028-01-31', 1), shiftMonth('2026-12-15', 1), shiftMonth('2026-01-10', -1), shiftMonth('2026-03-31', -1)],
+        ['2026-02-28', '2028-02-29', '2027-01-15', '2025-12-10', '2026-02-28']);
+    });
+    t('Calendar', 'Deadlines layer lists every reminder on its due date with the reminder status', function () {
+      var st = fresh(), ev = calendarEvents(st, T, { layers: { deadlines: true } }), c = {};
+      ev.forEach(function (e) { c[e.status] = (c[e.status] || 0) + 1; });
+      var okDates = ev.every(function (e) { return st.reminders.filter(function (r) { return r.id === e.reminderId; })[0].due === e.date; });
+      return eq([ev.length, c.overdue, c.soon, c.upcoming, c.done, okDates], [7, 1, 1, 4, 1, true]);
+    });
+    t('Calendar', 'With every layer off nothing is returned; items sort by date, then layer', function () {
+      var st = fresh(), none = calendarEvents(st, T, { layers: {} }), all = calendarEvents(st, T, {});
+      var sorted = all.every(function (e, i) { return i === 0 || all[i - 1].date < e.date || (all[i - 1].date === e.date && LAYER_RANK[all[i - 1].layer] <= LAYER_RANK[e.layer]); });
+      return eq([none.length, all.length > 20, sorted], [0, true, true]);
+    });
+    t('Calendar', 'A date range keeps only items inside it', function () {
+      var st = fresh(), ev = calendarEvents(st, T, { from: T, to: addDays(T, 5) });
+      return eq([ev.length > 0, ev.every(function (e) { return e.date >= T && e.date <= addDays(T, 5); })], [true, true]);
+    });
+    t('Calendar', 'Documents sit on their document date; inbox items on the day they arrived', function () {
+      var st = fresh(), ev = calendarEvents(st, T, { layers: { documents: true } });
+      var ok = ev.every(function (x) { var e = findEntry(st, x.entryId); return x.date === (e.docDate || localDateOf(e.createdAt)); });
+      return eq([ev.length, ok], [st.entries.length, true]);
+    });
+    t('Calendar', 'Ledger filter keeps only that ledger and drops unfiled inbox items', function () {
+      var st = fresh(), res = [];
+      ['client', 'office'].forEach(function (l) { // inbox items default to the office ledger, so check both
+        var ev = calendarEvents(st, T, { layers: { documents: true }, ledger: l });
+        var want = st.entries.filter(function (e) { return e.ledger === l && e.status !== 'inbox'; }).length;
+        res.push(ev.length === want && ev.every(function (e) { return e.ledger === l && e.status !== 'inbox'; }));
+      });
+      return eq(res, [true, true]);
+    });
+    t('Calendar', 'Approvals follow approvedAt and drop out when an entry is reopened', function () {
+      var st = fresh(), before = calendarEvents(st, T, { layers: { approvals: true } }).length;
+      reopenEntry(st, userById(st, 'am'), byPayee(st, 'Pos Laju', 'approved').id, 'Wrong ledger');
+      return eq([before, calendarEvents(st, T, { layers: { approvals: true } }).length], [5, 4]);
+    });
+    t('Calendar', 'Export batches show once and leave a ledger filter they have no entries in', function () {
+      var st = fresh(), L = { exports: true };
+      var all = calendarEvents(st, T, { layers: L }), cl = calendarEvents(st, T, { layers: L, ledger: 'client' }), of = calendarEvents(st, T, { layers: L, ledger: 'office' });
+      return eq([all.length, all[0].count, cl.length, of.length], [1, 2, 0, 1]);
+    });
+    t('Calendar', 'Summary: overdue and next-7-days agree with the dashboard; approved total agrees too', function () {
+      var st = fresh(), ym = T.slice(0, 7), s = calendarSummary(st, T, ym), d = dashboardStats(st, T);
+      var sum = round2(d.month.office.out + d.month.office.inn + d.month.client.out + d.month.client.inn);
+      return eq([s.overdue, s.next7, s.overdueFirst, s.next7First, s.approvedTotal], [d.overdue, d.soon, addDays(T, -5), addDays(T, 4), sum]);
+    });
+    t('Calendar', 'ICS has one event per open deadline, CRLF line ends and all-day dates', function () {
+      var st = fresh(), r = buildICS(st, {}), txt = r.text, open = st.reminders.filter(function (x) { return x.status !== 'done'; });
+      var first = open.slice().sort(function (a, b) { return a.due < b.due ? -1 : 1; })[0];
+      var n1 = (txt.match(/BEGIN:VEVENT/g) || []).length, n2 = (txt.match(/END:VEVENT/g) || []).length;
+      return eq([r.count, n1, n2, /\r\n$/.test(txt), /(^|[^\r])\n/.test(txt), txt.indexOf('DTSTART;VALUE=DATE:' + first.due.replace(/-/g, '')) > 0, /UID:REM-\d+@accounts-intake-hub/.test(txt)],
+        [open.length, open.length, open.length, true, false, true, true]);
+    });
+    t('Calendar', 'ICS neutralises injected lines, commas and semicolons in titles', function () {
+      var st = fresh();
+      addReminder(st, userById(st, 'am'), { kind: 'CUSTOM', title: 'Pay A, B; C\r\nATTENDEE:mailto:x@y.z', due: addDays(T, 3) });
+      var unfolded = buildICS(st, {}).text.replace(/\r\n /g, '');
+      return eq([unfolded.indexOf('SUMMARY:Pay A\\, B\\; C\\nATTENDEE:mailto:x@y.z') > 0, /^ATTENDEE/m.test(unfolded)], [true, false]);
+    });
+    t('Calendar', 'ICS lines fold at 75 octets (multi-byte safe) and unfold to the original text', function () {
+      var st = fresh(), title = 'Bayaran balik kepada Pejabat Tanah dan Galian, Kota Kinabalu: yuran carian résumé ' + new Array(12).join('é');
+      addReminder(st, userById(st, 'am'), { kind: 'CUSTOM', title: title, due: addDays(T, 5) });
+      var txt = buildICS(st, {}).text, enc = new TextEncoder();
+      var longest = Math.max.apply(null, txt.split('\r\n').map(function (l) { return enc.encode(l).length; }));
+      return eq([longest <= 75, txt.replace(/\r\n /g, '').indexOf('SUMMARY:' + title.replace(/,/g, '\\,')) > 0], [true, true]);
+    });
+    t('Calendar', 'ICS carries no amounts, payees or matter numbers and omits finished deadlines', function () {
+      var txt = buildICS(fresh(), {}).text;
+      var leaks = ['Tenaga', 'Pos Laju', 'M/2026', 'RM ', 'KWSP-ACK'].filter(function (w) { return txt.indexOf(w) >= 0; });
+      return eq([leaks, txt.indexOf('two months back') < 0], [[], true]);
+    });
+
     clockFn = saved;
     return results;
   }
@@ -1040,6 +1258,8 @@ var Core = (function () {
     validateFoxMap: validateFoxMap, buildTable: buildTable, toDelimited: toDelimited, createBatch: createBatch, buildJSON: buildJSON,
     parsePasted: parsePasted, simulateExtract: simulateExtract, calcPayroll: calcPayroll, payrollEntryPatches: payrollEntryPatches,
     addReminder: addReminder, generateStatutory: generateStatutory, markReminderDone: markReminderDone, dashboardStats: dashboardStats,
+    CAL_LAYERS: CAL_LAYERS, normWeekStart: normWeekStart, monthGrid: monthGrid, weekDays: weekDays, shiftMonth: shiftMonth, monthBounds: monthBounds,
+    calendarEvents: calendarEvents, calendarSummary: calendarSummary, buildICS: buildICS,
     audit: audit, runSelfTests: runSelfTests
   };
 })();

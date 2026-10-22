@@ -11,7 +11,7 @@ The release artefact is one self-contained HTML file: `dist/accounts-intake-hub.
 ```
 src/        core.js (pure rules engine) · i18n.js (EN/BM) · app.js (UI) · styles.css · dark.css · template.html
 scripts/    build.js · test.js (core self-tests) · i18ncheck.js (EN/BM key + placeholder parity)
-tests/      smoke.js (jsdom end-to-end flow, 70 checks)
+tests/      smoke.js (jsdom end-to-end flow, 113 checks)
 dist/       accounts-intake-hub.html (release build)
 ```
 
@@ -19,15 +19,22 @@ dist/       accounts-intake-hub.html (release build)
 
 ```
 npm install
-npm run build        # dist/accounts-intake-hub.html (prod: test hook stripped)
-npm run build:test   # .build/test-build.html (exposes window.__aih for tests)
-npm run test:core    # 53 rule checks; optional date arg: node scripts/test.js 2026-12-31
+npm run build           # dist/accounts-intake-hub.html (standalone page, prod: test hook stripped)
+npm run build:artifact  # same, as a fragment for the claude.ai artifact wrapper (no doctype/viewport meta)
+npm run build:test      # .build/test-build.html (exposes window.__aih for tests)
+npm run test:core       # 69 rule checks; optional date arg: node scripts/test.js 2026-12-31
 npm run test:i18n
 npm run test:smoke
 npm test             # all of the above
 ```
 
 Node >= 20. Runtime has no build dependency; SheetJS 0.18.5 is loaded from cdnjs for `.xlsx` export (CSV fallback if it fails to load). `jsdom` and `xlsx` are dev-only, for the smoke test.
+
+## Calendar
+
+The Calendar tab is a read-only view derived from existing data (nothing extra is stored). Layers: statutory and custom **deadlines** (overdue / due soon / upcoming / done), **documents** by document date (inbox items by capture date), **approvals** by approval date, and **exports** by batch. Month, week and agenda views; a day panel reuses the normal entry rows and reminder controls, so a deadline can be added or marked done from there. Filter by ledger (all / office / client); Monday or Sunday week start in Setup; English and Bahasa Malaysia date formats. Keyboard: arrow keys move between days, Home/End go to the week edges, Page Up/Down change month.
+
+"Download deadlines (.ics)" exports open deadlines only (RFC 5545, with reminders two days and on the morning of). Amounts, payees and matter numbers are deliberately left out of the file. Public and state holidays are not included, because wrong holiday data is worse than none.
 
 ## Business rules (enforced in `src/core.js`)
 

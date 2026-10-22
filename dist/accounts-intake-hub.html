@@ -1,3 +1,6 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Accounts Intake Hub</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,6 +42,7 @@ color-scheme: dark;
 color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }  /* author display rules (.drawer, .more-sheet, .note ...) must not defeat the hidden attribute */
 html, body { background: var(--bg); }
 body {
   margin: 0; color: var(--ink); background: var(--bg); font: 15px/1.5 var(--f-body);
@@ -233,6 +237,103 @@ tr.tot td { border-top: 1px solid var(--ink); border-bottom: 4px double var(--in
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: no-preference) { .toast { animation: tin .18s ease-out; } @keyframes tin { from { opacity: 0; transform: translateY(6px); } } }
 
+/* calendar */
+.kpis.k4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 760px) { .kpis.k4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+div.kpi { cursor: default; }
+div.kpi:hover { border-color: var(--line); }
+.cal-layout { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+@media (min-width: 1000px) {
+  .cal-layout:not(.wide) { grid-template-columns: minmax(0, 1.85fr) minmax(300px, 1fr); align-items: start; }
+  .cal-layout:not(.wide) .cal-panel { position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; }
+}
+.cal-card { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+.cal-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 14px; }
+.cal-nav { gap: 6px; }
+.cal-title { font: 600 1.35rem/1.1 var(--f-display); letter-spacing: -.01em; min-width: 8.5rem; margin-inline: 6px; }
+.cal-ph { font: 600 1.15rem/1.2 var(--f-display); }
+.btn.icon { padding: 6px 8px; }
+.cal-month { width: auto; padding: 5px 8px; font-size: .88rem; }
+.cal-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.cal-layer { font: inherit; font-size: .84rem; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 99px; padding: 4px 12px; cursor: pointer; }
+.cal-layer b { font: 500 .76rem var(--f-mono); color: var(--muted); }
+.cal-layer[aria-pressed="false"] { color: var(--muted); background: transparent; border-style: dashed; }
+.cal-layer[aria-pressed="false"] .sw { opacity: .35; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.sw-deadlines { background: var(--warn); } .sw-documents { background: var(--accent); }
+.sw-approvals { border: 2px dashed var(--ok); background: transparent; } .sw-exports { background: var(--info); }
+
+/* month grid */
+.cal-grid { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; background: var(--line); display: grid; gap: 1px; }
+.cal-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 1px; }
+.cal-wd { background: var(--surface-2); font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); padding: 6px 8px; font-weight: 600; }
+.cal-cell { background: var(--surface); min-width: 0; position: relative; }
+.cal-cell.we, .cal-wd.we, .wk-col.we { background: var(--surface-2); }
+@supports (background: color-mix(in srgb, red, blue)) { .cal-cell.we, .wk-col.we { background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)); } }
+.cal-cell.out .dn { color: var(--muted); opacity: .75; }
+.cal-cell.out .cal-pills, .cal-cell.out .cal-dots { opacity: .6; }
+.cal-cell.sel { box-shadow: inset 0 0 0 2px var(--accent); z-index: 1; }
+.cal-day { font: inherit; color: inherit; background: none; border: 0; text-align: left; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; width: 100%; min-height: 108px; padding: 6px; cursor: pointer; }
+.cal-day:hover { background: var(--accent-soft); }
+.cal-day:focus-visible, .wk-head:focus-visible, .cev:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dn { font: 500 .84rem var(--f-mono); font-variant-numeric: tabular-nums; min-width: 1.75em; height: 1.75em; padding-inline: 2px; display: inline-grid; place-items: center; border-radius: 99px; }
+.dn.today { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.cal-pills { display: flex; flex-direction: column; gap: 3px; min-width: 0; width: 100%; }
+.cal-pill { display: block; font-size: .73rem; line-height: 1.4; padding: 1px 6px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cal-more { font-size: .72rem; color: var(--muted); padding-left: 4px; }
+.cal-dots { display: none; flex-wrap: wrap; gap: 3px; justify-content: center; width: 100%; }
+
+/* item looks: shape and colour both carry meaning */
+.ev-deadlines { background: var(--neutral-soft); color: var(--muted); border-left: 3px solid var(--info); font-weight: 600; }
+.ev-deadlines.s-overdue { background: var(--bad-soft); color: var(--bad); border-left-color: var(--bad); }
+.ev-deadlines.s-soon { background: var(--warn-soft); color: var(--warn); border-left-color: var(--warn); }
+.ev-deadlines.s-done { background: var(--ok-soft); color: var(--ok); border-left-color: var(--ok); text-decoration: line-through; }
+.ev-documents { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-left: 3px solid var(--accent); }
+.ev-documents.l-client { background: var(--brass-soft); color: var(--brass); border-color: var(--brass-soft); border-left-color: var(--brass); }
+.ev-approvals { background: transparent; color: var(--ok); border: 1px dashed var(--ok); }
+.ev-exports { background: var(--accent-soft); color: var(--accent); font-weight: 600; border-left: 3px solid var(--accent); }
+.cal-dot.ev { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 99px; background: currentColor; text-decoration: none; }
+.cal-dot.ev-documents { color: var(--accent); } .cal-dot.ev-documents.l-client { color: var(--brass); }
+.cal-dot.ev-deadlines.s-upcoming { color: var(--info); }
+.cal-dot.ev-approvals { border-radius: 2px; }
+@media (max-width: 719px) {
+  .cal-pills { display: none; } .cal-dots { display: flex; }
+  .cal-day { min-height: 58px; align-items: center; padding: 4px 1px; gap: 3px; }
+  .cal-wd { padding: 6px 2px; text-align: center; font-size: .66rem; letter-spacing: .03em; }
+  .cal-title { min-width: 0; font-size: 1.2rem; }
+}
+
+/* week and agenda */
+.cal-week { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+@media (min-width: 1000px) { .cal-week { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+.wk-col { border: 1px solid var(--line); border-radius: 6px; background: var(--surface); display: flex; flex-direction: column; min-width: 0; min-height: 8rem; }
+.wk-col.sel { box-shadow: 0 0 0 2px var(--accent); }
+.wk-head { font: inherit; font-size: .76rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: none; border: 0; border-bottom: 1px solid var(--line); padding: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; cursor: pointer; text-align: left; width: 100%; }
+.wk-head:hover { background: var(--accent-soft); }
+.wk-head .dn { font-size: .9rem; color: var(--ink); } .wk-head .dn.today { color: var(--accent-ink); }
+.wk-evs { display: flex; flex-direction: column; gap: 6px; padding: 8px; }
+.wk-none { text-align: center; }
+.cev { font: inherit; text-align: left; display: flex; flex-direction: column; gap: 1px; padding: 6px 8px; border-radius: 6px; cursor: pointer; min-width: 0; width: 100%; }
+.cev:hover { filter: brightness(.97); }
+.cev-t { font-weight: 600; font-size: .84rem; overflow-wrap: anywhere; }
+.cev-s { font-size: .74rem; opacity: .9; overflow-wrap: anywhere; }
+.cev-s .num { display: block; }
+.wk-mon { opacity: .8; }
+.cal-agenda { display: flex; flex-direction: column; }
+.ag-day { display: flex; flex-direction: column; gap: 6px; padding: 12px 0; border-top: 1px solid var(--line); }
+.ag-day:first-child { border-top: 0; padding-top: 0; }
+.ag-day h4 { margin: 0; font: 600 .95rem var(--f-body); display: flex; align-items: center; gap: 8px; }
+.ag-h { font: inherit; font-weight: 600; color: var(--ink); background: none; border: 0; padding: 2px 0; cursor: pointer; text-align: left; }
+.ag-h:hover { color: var(--accent); }
+.ag-day.sel .ag-h { color: var(--accent); }
+
+/* day panel */
+.cal-sec { display: flex; flex-direction: column; gap: 6px; }
+.cal-sec > h3 { display: flex; gap: 8px; align-items: baseline; }
+.cal-panel .erow { grid-template-columns: minmax(0, 1fr) auto; }
+.cal-panel .er-main { grid-column: 1 / -1; }
+.cal-panel .er-tags { justify-content: flex-start; }
+
 </style>
 <div id="app">
   <header class="top">
@@ -374,6 +475,7 @@ var Core = (function () {
     return {
       lang: 'en',
       rollRule: 'next',
+      weekStart: 1, // calendar week starts on Monday (1) or Sunday (0)
       dueDays: { EPF: 15, SOCSO: 15, EIS: 15, PCB: 15 },
       rates: {
         epfEmployerLow: 13, epfEmployerHigh: 12, epfThreshold: 5000, epfEmployee: 11, epfRoundUp: true,
@@ -833,6 +935,137 @@ var Core = (function () {
     return r;
   }
 
+  /* ---------- calendar ---------- */
+  var CAL_LAYERS = ['deadlines', 'documents', 'approvals', 'exports'];
+  var LAYER_RANK = { deadlines: 0, documents: 1, approvals: 2, exports: 3 };
+  var DL_RANK = { overdue: 0, soon: 1, upcoming: 2, done: 3 };
+  function normWeekStart(w) { return Number(w) === 0 ? 0 : 1; }
+  /* Rows of 7 days covering the month of ym (YYYY-MM), padded with the neighbouring months' days. */
+  function monthGrid(ym, weekStart) {
+    var ws = normWeekStart(weekStart), first = ym + '-01', dow = parseISO(first).getUTCDay();
+    var lead = (dow - ws + 7) % 7, start = addDays(first, -lead);
+    var dim = new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate();
+    var weeks = Math.ceil((lead + dim) / 7), rows = [];
+    for (var w = 0; w < weeks; w++) {
+      var row = [];
+      for (var d = 0; d < 7; d++) {
+        var iso = addDays(start, w * 7 + d);
+        row.push({ date: iso, inMonth: iso.slice(0, 7) === ym, dow: parseISO(iso).getUTCDay() });
+      }
+      rows.push(row);
+    }
+    return rows;
+  }
+  function weekDays(iso, weekStart) {
+    var ws = normWeekStart(weekStart), lead = (parseISO(iso).getUTCDay() - ws + 7) % 7, start = addDays(iso, -lead), out = [];
+    for (var i = 0; i < 7; i++) out.push(addDays(start, i));
+    return out;
+  }
+  /* Move by whole months, keeping the day of month where it exists (31 Jan + 1 month = 28/29 Feb). */
+  function shiftMonth(iso, n) {
+    var y = +iso.slice(0, 4), m = +iso.slice(5, 7) - 1 + n, d = +iso.slice(8, 10);
+    y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+    var dim = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+    return y + '-' + pad(m + 1) + '-' + pad(Math.min(d, dim));
+  }
+  function monthBounds(ym) {
+    return { from: ym + '-01', to: ym + '-' + pad(new Date(Date.UTC(+ym.slice(0, 4), +ym.slice(5, 7), 0)).getUTCDate()) };
+  }
+  /* One flat, sorted list of calendar items from the existing data. Nothing is stored; it is derived on demand.
+     o: { from, to, layers: {deadlines, documents, approvals, exports}, ledger: 'all' | 'office' | 'client' } */
+  function calendarEvents(state, today, o) {
+    o = o || {};
+    var from = o.from || '', to = o.to || '', ledger = o.ledger || 'all', out = [];
+    var on = o.layers || { deadlines: true, documents: true, approvals: true, exports: true };
+    function inRange(d) { return !!d && (!from || d >= from) && (!to || d <= to); }
+    if (on.deadlines) state.reminders.forEach(function (r) {
+      if (!inRange(r.due)) return;
+      var st = reminderStatus(r, today);
+      out.push({ id: 'dl:' + r.id, layer: 'deadlines', date: r.due, kind: r.kind, status: st, title: r.title,
+        short: r.kind === 'CUSTOM' ? r.title : r.kind + (r.period ? ' ' + r.period : ''), reminderId: r.id, rank: DL_RANK[st] });
+    });
+    state.entries.forEach(function (e) {
+      if (ledger !== 'all' && (e.ledger !== ledger || e.status === 'inbox')) return; // inbox items are not filed to a ledger yet
+      var title = e.payee || (e.attachments && e.attachments[0] && e.attachments[0].name) || '';
+      if (on.documents) {
+        var d = e.docDate || localDateOf(e.createdAt);
+        if (inRange(d)) out.push({ id: 'doc:' + e.id, layer: 'documents', date: d, kind: e.type, status: e.status, title: title, source: e.source,
+          entryId: e.id, ledger: e.ledger, amount: e.totalAmount, rank: 0 });
+      }
+      if (on.approvals && e.approvedAt && (e.status === 'approved' || e.status === 'exported')) {
+        var a = localDateOf(e.approvedAt);
+        if (inRange(a)) out.push({ id: 'apr:' + e.id, layer: 'approvals', date: a, kind: e.type, status: e.status, title: title, source: e.source,
+          entryId: e.id, ledger: e.ledger, amount: e.totalAmount, by: e.approvedBy, at: e.approvedAt, rank: 0 });
+      }
+    });
+    if (on.exports) state.batches.forEach(function (b) {
+      var d = localDateOf(b.createdAt);
+      if (!inRange(d)) return;
+      var snap = ledger === 'all' ? b.snapshot : b.snapshot.filter(function (x) { return x.ledger === ledger; });
+      if (!snap.length) return;
+      var total = 0; snap.forEach(function (x) { total += x.totalAmount; });
+      out.push({ id: 'bat:' + b.id, layer: 'exports', date: d, kind: 'batch', status: 'exported', title: b.id, batchId: b.id,
+        count: snap.length, amount: round2(total), by: b.createdBy, at: b.createdAt, rank: 0 });
+    });
+    out.sort(function (a, b) {
+      return a.date < b.date ? -1 : a.date > b.date ? 1 : (LAYER_RANK[a.layer] - LAYER_RANK[b.layer]) || (a.rank - b.rank) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+    });
+    return out;
+  }
+  /* Figures for the strip above the calendar. Overdue and next-7-days ignore the visible month on purpose. */
+  function calendarSummary(state, today, ym) {
+    var s = { overdue: 0, overdueFirst: '', next7: 0, next7First: '', monthOpen: 0, monthDone: 0, monthDocs: 0, approvedCount: 0, approvedTotal: 0 };
+    var b = monthBounds(ym);
+    state.reminders.forEach(function (r) {
+      var st = reminderStatus(r, today);
+      if (st === 'overdue') { s.overdue++; if (!s.overdueFirst || r.due < s.overdueFirst) s.overdueFirst = r.due; }
+      if (st === 'soon') { s.next7++; if (!s.next7First || r.due < s.next7First) s.next7First = r.due; }
+      if (r.due >= b.from && r.due <= b.to) { if (r.status === 'done') s.monthDone++; else s.monthOpen++; }
+    });
+    state.entries.forEach(function (e) {
+      if (e.status !== 'inbox' && e.docDate >= b.from && e.docDate <= b.to) s.monthDocs++;
+      if ((e.status === 'approved' || e.status === 'exported') && e.approvedAt) {
+        var a = localDateOf(e.approvedAt);
+        if (a >= b.from && a <= b.to) { s.approvedCount++; s.approvedTotal = round2(s.approvedTotal + e.totalAmount); }
+      }
+    });
+    return s;
+  }
+  /* iCalendar (RFC 5545). Open deadlines only: no amounts, payees or matter numbers leave the app. */
+  function icsEscape(s) {
+    return String(s === null || s === undefined ? '' : s).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '')
+      .replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r\n|\r|\n/g, '\\n');
+  }
+  function icsFold(line) {
+    var out = [], cur = '', len = 0;
+    Array.from(line).forEach(function (ch) {
+      var c = ch.codePointAt(0), n = c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4;
+      if (len + n > 75) { out.push(cur); cur = ' ' + ch; len = 1 + n; } else { cur += ch; len += n; }
+    });
+    out.push(cur);
+    return out.join('\r\n');
+  }
+  function buildICS(state, o) {
+    o = o || {};
+    var L = o.labels || {}, stamp = nowISO().replace(/[-:]|\.\d{3}/g, '');
+    var lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Accounts Intake Hub//Deadlines//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+      'X-WR-CALNAME:' + icsEscape(L.calName || 'Accounts Intake Hub deadlines')];
+    var open = state.reminders.filter(function (r) { return r.status !== 'done' && parseISO(r.due); })
+      .sort(function (a, b) { return a.due < b.due ? -1 : a.due > b.due ? 1 : (a.id < b.id ? -1 : 1); });
+    open.forEach(function (r) {
+      var d0 = r.due.replace(/-/g, ''), d1 = addDays(r.due, 1).replace(/-/g, '');
+      var desc = (r.kind === 'CUSTOM' ? (L.custom || 'Reminder') : (L.statutory || 'Statutory deadline') + ' (' + r.kind + ')') + (r.period ? '. ' + (L.wage || 'Wage month') + ' ' + r.period : '');
+      lines.push('BEGIN:VEVENT', 'UID:' + r.id + '@accounts-intake-hub', 'DTSTAMP:' + stamp, 'DTSTART;VALUE=DATE:' + d0, 'DTEND;VALUE=DATE:' + d1,
+        'SUMMARY:' + icsEscape(r.title), 'DESCRIPTION:' + icsEscape(desc), 'CATEGORIES:' + icsEscape(r.kind === 'CUSTOM' ? 'Reminder' : 'Statutory'),
+        'TRANSP:TRANSPARENT',
+        'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEscape(r.title), 'TRIGGER:-P2DT15H', 'END:VALARM', // 09:00, three days before
+        'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEscape(r.title), 'TRIGGER:PT9H', 'END:VALARM', // 09:00 on the day
+        'END:VEVENT');
+    });
+    lines.push('END:VCALENDAR');
+    return { text: lines.map(icsFold).join('\r\n') + '\r\n', count: open.length };
+  }
+
   /* ---------- dashboard ---------- */
   function dashboardStats(state, today) {
     var ym = today.slice(0, 7);
@@ -1278,6 +1511,92 @@ var Core = (function () {
       return eq([s.inbox, s.submitted, s.overdue, s.soon], [3, 4, 1, 1]);
     });
 
+    t('Calendar', 'Month grid starts on the chosen weekday and covers the month (Oct 2026)', function () {
+      var m = monthGrid('2026-10', 1), s = monthGrid('2026-10', 0);
+      return eq([m.length, m[0][0].date, m[4][6].date, s.length, s[0][0].date, s[4][6].date], [5, '2026-09-28', '2026-11-01', 5, '2026-09-27', '2026-10-31']);
+    });
+    t('Calendar', 'Month grid height varies from 4 to 6 rows (Feb 2026 Sun/Mon start, Mar 2026 Mon start)', function () {
+      return eq([monthGrid('2026-02', 0).length, monthGrid('2026-02', 1).length, monthGrid('2026-03', 1).length], [4, 5, 6]);
+    });
+    t('Calendar', 'Week days follow the week start; week start defaults to Monday', function () {
+      var mon = weekDays('2026-10-22', 1), sun = weekDays('2026-10-22', 0);
+      return eq([mon[0], mon[6], sun[0], sun[6], defaultSettings().weekStart, normWeekStart('0'), normWeekStart(undefined)],
+        ['2026-10-19', '2026-10-25', '2026-10-18', '2026-10-24', 1, 0, 1]);
+    });
+    t('Calendar', 'Month shift clamps the day and rolls the year', function () {
+      return eq([shiftMonth('2026-01-31', 1), shiftMonth('2028-01-31', 1), shiftMonth('2026-12-15', 1), shiftMonth('2026-01-10', -1), shiftMonth('2026-03-31', -1)],
+        ['2026-02-28', '2028-02-29', '2027-01-15', '2025-12-10', '2026-02-28']);
+    });
+    t('Calendar', 'Deadlines layer lists every reminder on its due date with the reminder status', function () {
+      var st = fresh(), ev = calendarEvents(st, T, { layers: { deadlines: true } }), c = {};
+      ev.forEach(function (e) { c[e.status] = (c[e.status] || 0) + 1; });
+      var okDates = ev.every(function (e) { return st.reminders.filter(function (r) { return r.id === e.reminderId; })[0].due === e.date; });
+      return eq([ev.length, c.overdue, c.soon, c.upcoming, c.done, okDates], [7, 1, 1, 4, 1, true]);
+    });
+    t('Calendar', 'With every layer off nothing is returned; items sort by date, then layer', function () {
+      var st = fresh(), none = calendarEvents(st, T, { layers: {} }), all = calendarEvents(st, T, {});
+      var sorted = all.every(function (e, i) { return i === 0 || all[i - 1].date < e.date || (all[i - 1].date === e.date && LAYER_RANK[all[i - 1].layer] <= LAYER_RANK[e.layer]); });
+      return eq([none.length, all.length > 20, sorted], [0, true, true]);
+    });
+    t('Calendar', 'A date range keeps only items inside it', function () {
+      var st = fresh(), ev = calendarEvents(st, T, { from: T, to: addDays(T, 5) });
+      return eq([ev.length > 0, ev.every(function (e) { return e.date >= T && e.date <= addDays(T, 5); })], [true, true]);
+    });
+    t('Calendar', 'Documents sit on their document date; inbox items on the day they arrived', function () {
+      var st = fresh(), ev = calendarEvents(st, T, { layers: { documents: true } });
+      var ok = ev.every(function (x) { var e = findEntry(st, x.entryId); return x.date === (e.docDate || localDateOf(e.createdAt)); });
+      return eq([ev.length, ok], [st.entries.length, true]);
+    });
+    t('Calendar', 'Ledger filter keeps only that ledger and drops unfiled inbox items', function () {
+      var st = fresh(), res = [];
+      ['client', 'office'].forEach(function (l) { // inbox items default to the office ledger, so check both
+        var ev = calendarEvents(st, T, { layers: { documents: true }, ledger: l });
+        var want = st.entries.filter(function (e) { return e.ledger === l && e.status !== 'inbox'; }).length;
+        res.push(ev.length === want && ev.every(function (e) { return e.ledger === l && e.status !== 'inbox'; }));
+      });
+      return eq(res, [true, true]);
+    });
+    t('Calendar', 'Approvals follow approvedAt and drop out when an entry is reopened', function () {
+      var st = fresh(), before = calendarEvents(st, T, { layers: { approvals: true } }).length;
+      reopenEntry(st, userById(st, 'am'), byPayee(st, 'Pos Laju', 'approved').id, 'Wrong ledger');
+      return eq([before, calendarEvents(st, T, { layers: { approvals: true } }).length], [5, 4]);
+    });
+    t('Calendar', 'Export batches show once and leave a ledger filter they have no entries in', function () {
+      var st = fresh(), L = { exports: true };
+      var all = calendarEvents(st, T, { layers: L }), cl = calendarEvents(st, T, { layers: L, ledger: 'client' }), of = calendarEvents(st, T, { layers: L, ledger: 'office' });
+      return eq([all.length, all[0].count, cl.length, of.length], [1, 2, 0, 1]);
+    });
+    t('Calendar', 'Summary: overdue and next-7-days agree with the dashboard; approved total agrees too', function () {
+      var st = fresh(), ym = T.slice(0, 7), s = calendarSummary(st, T, ym), d = dashboardStats(st, T);
+      var sum = round2(d.month.office.out + d.month.office.inn + d.month.client.out + d.month.client.inn);
+      return eq([s.overdue, s.next7, s.overdueFirst, s.next7First, s.approvedTotal], [d.overdue, d.soon, addDays(T, -5), addDays(T, 4), sum]);
+    });
+    t('Calendar', 'ICS has one event per open deadline, CRLF line ends and all-day dates', function () {
+      var st = fresh(), r = buildICS(st, {}), txt = r.text, open = st.reminders.filter(function (x) { return x.status !== 'done'; });
+      var first = open.slice().sort(function (a, b) { return a.due < b.due ? -1 : 1; })[0];
+      var n1 = (txt.match(/BEGIN:VEVENT/g) || []).length, n2 = (txt.match(/END:VEVENT/g) || []).length;
+      return eq([r.count, n1, n2, /\r\n$/.test(txt), /(^|[^\r])\n/.test(txt), txt.indexOf('DTSTART;VALUE=DATE:' + first.due.replace(/-/g, '')) > 0, /UID:REM-\d+@accounts-intake-hub/.test(txt)],
+        [open.length, open.length, open.length, true, false, true, true]);
+    });
+    t('Calendar', 'ICS neutralises injected lines, commas and semicolons in titles', function () {
+      var st = fresh();
+      addReminder(st, userById(st, 'am'), { kind: 'CUSTOM', title: 'Pay A, B; C\r\nATTENDEE:mailto:x@y.z', due: addDays(T, 3) });
+      var unfolded = buildICS(st, {}).text.replace(/\r\n /g, '');
+      return eq([unfolded.indexOf('SUMMARY:Pay A\\, B\\; C\\nATTENDEE:mailto:x@y.z') > 0, /^ATTENDEE/m.test(unfolded)], [true, false]);
+    });
+    t('Calendar', 'ICS lines fold at 75 octets (multi-byte safe) and unfold to the original text', function () {
+      var st = fresh(), title = 'Bayaran balik kepada Pejabat Tanah dan Galian, Kota Kinabalu: yuran carian résumé ' + new Array(12).join('é');
+      addReminder(st, userById(st, 'am'), { kind: 'CUSTOM', title: title, due: addDays(T, 5) });
+      var txt = buildICS(st, {}).text, enc = new TextEncoder();
+      var longest = Math.max.apply(null, txt.split('\r\n').map(function (l) { return enc.encode(l).length; }));
+      return eq([longest <= 75, txt.replace(/\r\n /g, '').indexOf('SUMMARY:' + title.replace(/,/g, '\\,')) > 0], [true, true]);
+    });
+    t('Calendar', 'ICS carries no amounts, payees or matter numbers and omits finished deadlines', function () {
+      var txt = buildICS(fresh(), {}).text;
+      var leaks = ['Tenaga', 'Pos Laju', 'M/2026', 'RM ', 'KWSP-ACK'].filter(function (w) { return txt.indexOf(w) >= 0; });
+      return eq([leaks, txt.indexOf('two months back') < 0], [[], true]);
+    });
+
     clockFn = saved;
     return results;
   }
@@ -1295,6 +1614,8 @@ var Core = (function () {
     validateFoxMap: validateFoxMap, buildTable: buildTable, toDelimited: toDelimited, createBatch: createBatch, buildJSON: buildJSON,
     parsePasted: parsePasted, simulateExtract: simulateExtract, calcPayroll: calcPayroll, payrollEntryPatches: payrollEntryPatches,
     addReminder: addReminder, generateStatutory: generateStatutory, markReminderDone: markReminderDone, dashboardStats: dashboardStats,
+    CAL_LAYERS: CAL_LAYERS, normWeekStart: normWeekStart, monthGrid: monthGrid, weekDays: weekDays, shiftMonth: shiftMonth, monthBounds: monthBounds,
+    calendarEvents: calendarEvents, calendarSummary: calendarSummary, buildICS: buildICS,
     audit: audit, runSelfTests: runSelfTests
   };
 })();
@@ -1391,7 +1712,24 @@ var I18N = {
     'ce.BALANCE_OVERRIDE_REQUIRED': 'This payment is above the client balance. Enter a reason to approve it anyway.', 'ce.REASON_REQUIRED': 'A reason is required.', 'ce.EXPORTED_LOCKED': 'This entry is in an export batch and cannot be reopened.',
     'ce.NOT_EXPORTABLE': 'Only approved entries that are not in a batch can be exported.', 'ce.NOTHING_SELECTED': 'Select at least one entry.', 'ce.NOT_FOUND': 'That record no longer exists.',
     'err.required': 'Required', 'err.invalid_date': 'Enter a valid date', 'err.amount_positive': 'Enter an amount above zero', 'err.matter_required': 'A matter number is required for the client ledger',
-    'err.matter_unknown': 'This matter number is not in the list', 'err.invalid_amount': 'Enter a valid amount', 'err.invalid': 'Not valid'
+    'err.matter_unknown': 'This matter number is not in the list', 'err.invalid_amount': 'Enter a valid amount', 'err.invalid': 'Not valid',
+    'nav.calendar': 'Calendar', 'cal.title': 'Calendar', 'cal.today': 'Today', 'cal.prev': 'Previous', 'cal.next': 'Next', 'cal.view': 'View',
+    'cal.month': 'Month', 'cal.week': 'Week', 'cal.agenda': 'Agenda', 'cal.jump': 'Go to month',
+    'cal.l.deadlines': 'Deadlines', 'cal.l.documents': 'Documents', 'cal.l.approvals': 'Approvals', 'cal.l.exports': 'Exports',
+    'cal.layers': 'Show', 'cal.ledger': 'Ledger', 'cal.all': 'All',
+    'cal.kOverdue': 'Overdue deadlines', 'cal.kOverdueSub': 'go to the oldest', 'cal.kSoon': 'Due in 7 days', 'cal.kSoonSub': 'go to the next', 'cal.kNone': 'none',
+    'cal.kMonth': 'Deadlines in {month}', 'cal.kMonthSub': '{open} open, {done} done', 'cal.kApproved': 'Approved in {month}', 'cal.kApprovedSub': '{amt} in total',
+    'cal.pillApproved': 'Approved {id}', 'cal.more': '+{n} more',
+    'cal.cell': '{date}. {n} items.', 'cal.cellOne': '{date}. 1 item.', 'cal.cellOver': '{date}. {n} items, {o} overdue.', 'cal.cellNone': '{date}. Nothing scheduled.',
+    'cal.hint': 'Arrow keys move between days. Page Up and Page Down change the month.',
+    'cal.none': 'Nothing is scheduled on this day.', 'cal.agendaEmpty': 'Nothing scheduled in {month} with the current filters.',
+    'cal.weekOf': 'Week of {date}', 'cal.relToday': 'Today', 'cal.relTomorrow': 'Tomorrow', 'cal.relYesterday': 'Yesterday', 'cal.relIn': 'in {n} days', 'cal.relAgo': '{n} days ago',
+    'cal.items': '{n} items', 'cal.itemOne': '1 item', 'cal.addReminder': 'Add a reminder for this day', 'cal.reminderTitle': 'Reminder title',
+    'cal.approvedBy': 'Approved by {name} at {time}', 'cal.batchLine': '{n} entries, {amt}. Created by {name}.', 'cal.openExport': 'Open Export',
+    'cal.ics': 'Download deadlines (.ics)', 'cal.icsNote': 'Open deadlines only, for Outlook, Google Calendar or a phone. No amounts, payees or matter numbers are included.',
+    'cal.icsEmpty': 'There are no open deadlines to export.',
+    'cal.ics.cal': 'Accounts Intake Hub deadlines', 'cal.ics.stat': 'Statutory deadline', 'cal.ics.custom': 'Reminder', 'cal.ics.wage': 'Wage month',
+    'se.weekStart': 'Calendar week starts on', 'se.wk.1': 'Monday', 'se.wk.0': 'Sunday'
   },
   ms: {
     'app.name': 'Pusat Kemasukan Akaun', 'app.sub': 'Bil, bayaran dan resit untuk pasukan akaun firma',
@@ -1483,7 +1821,24 @@ var I18N = {
     'ce.BALANCE_OVERRIDE_REQUIRED': 'Bayaran ini melebihi baki klien. Masukkan sebab untuk meluluskannya juga.', 'ce.REASON_REQUIRED': 'Sebab diperlukan.', 'ce.EXPORTED_LOCKED': 'Kemasukan ini berada dalam kelompok eksport dan tidak boleh dibuka semula.',
     'ce.NOT_EXPORTABLE': 'Hanya kemasukan diluluskan yang belum dalam kelompok boleh dieksport.', 'ce.NOTHING_SELECTED': 'Pilih sekurang-kurangnya satu kemasukan.', 'ce.NOT_FOUND': 'Rekod itu tidak wujud lagi.',
     'err.required': 'Wajib diisi', 'err.invalid_date': 'Masukkan tarikh yang sah', 'err.amount_positive': 'Masukkan amaun melebihi sifar', 'err.matter_required': 'No. fail diperlukan untuk lejar klien',
-    'err.matter_unknown': 'No. fail ini tiada dalam senarai', 'err.invalid_amount': 'Masukkan amaun yang sah', 'err.invalid': 'Tidak sah'
+    'err.matter_unknown': 'No. fail ini tiada dalam senarai', 'err.invalid_amount': 'Masukkan amaun yang sah', 'err.invalid': 'Tidak sah',
+    'nav.calendar': 'Kalendar', 'cal.title': 'Kalendar', 'cal.today': 'Hari ini', 'cal.prev': 'Sebelum', 'cal.next': 'Seterusnya', 'cal.view': 'Paparan',
+    'cal.month': 'Bulan', 'cal.week': 'Minggu', 'cal.agenda': 'Agenda', 'cal.jump': 'Pergi ke bulan',
+    'cal.l.deadlines': 'Tarikh akhir', 'cal.l.documents': 'Dokumen', 'cal.l.approvals': 'Kelulusan', 'cal.l.exports': 'Eksport',
+    'cal.layers': 'Papar', 'cal.ledger': 'Lejar', 'cal.all': 'Semua',
+    'cal.kOverdue': 'Tarikh akhir lewat', 'cal.kOverdueSub': 'pergi ke yang terlama', 'cal.kSoon': 'Tamat dalam 7 hari', 'cal.kSoonSub': 'pergi ke yang seterusnya', 'cal.kNone': 'tiada',
+    'cal.kMonth': 'Tarikh akhir {month}', 'cal.kMonthSub': '{open} belum selesai, {done} selesai', 'cal.kApproved': 'Diluluskan {month}', 'cal.kApprovedSub': 'jumlah {amt}',
+    'cal.pillApproved': 'Lulus {id}', 'cal.more': '+{n} lagi',
+    'cal.cell': '{date}. {n} item.', 'cal.cellOne': '{date}. 1 item.', 'cal.cellOver': '{date}. {n} item, {o} lewat.', 'cal.cellNone': '{date}. Tiada jadual.',
+    'cal.hint': 'Kekunci anak panah bergerak antara hari. Page Up dan Page Down menukar bulan.',
+    'cal.none': 'Tiada apa-apa dijadualkan pada hari ini.', 'cal.agendaEmpty': 'Tiada apa-apa dijadualkan dalam {month} dengan penapis semasa.',
+    'cal.weekOf': 'Minggu {date}', 'cal.relToday': 'Hari ini', 'cal.relTomorrow': 'Esok', 'cal.relYesterday': 'Semalam', 'cal.relIn': 'dalam {n} hari', 'cal.relAgo': '{n} hari lalu',
+    'cal.items': '{n} item', 'cal.itemOne': '1 item', 'cal.addReminder': 'Tambah peringatan untuk hari ini', 'cal.reminderTitle': 'Tajuk peringatan',
+    'cal.approvedBy': 'Diluluskan oleh {name} pada {time}', 'cal.batchLine': '{n} kemasukan, {amt}. Dicipta oleh {name}.', 'cal.openExport': 'Buka Eksport',
+    'cal.ics': 'Muat turun tarikh akhir (.ics)', 'cal.icsNote': 'Hanya tarikh akhir yang belum selesai, untuk Outlook, Google Calendar atau telefon. Tiada amaun, penerima bayaran atau no. fail disertakan.',
+    'cal.icsEmpty': 'Tiada tarikh akhir terbuka untuk dieksport.',
+    'cal.ics.cal': 'Tarikh akhir Pusat Kemasukan Akaun', 'cal.ics.stat': 'Tarikh akhir berkanun', 'cal.ics.custom': 'Peringatan', 'cal.ics.wage': 'Bulan gaji',
+    'se.weekStart': 'Minggu kalendar bermula pada', 'se.wk.1': 'Isnin', 'se.wk.0': 'Ahad'
   }
 };
 
@@ -1491,7 +1846,7 @@ var I18N = {
   'use strict';
   var KEY = 'aih.state.v1', UIKEY = 'aih.ui.v1';
   var TABS = [['dashboard', 'nav.dashboard', 'grid'], ['inbox', 'nav.inbox', 'inbox'], ['entry', 'nav.entry', 'file'], ['approvals', 'nav.approvals', 'check'],
-    ['compliance', 'nav.compliance', 'cal'], ['export', 'nav.export', 'out'], ['audit', 'nav.audit', 'list'], ['setup', 'nav.setup', 'sliders']];
+    ['calendar', 'nav.calendar', 'cal'], ['compliance', 'nav.compliance', 'shield'], ['export', 'nav.export', 'out'], ['audit', 'nav.audit', 'list'], ['setup', 'nav.setup', 'sliders']];
   var PRIMARY = ['dashboard', 'inbox', 'entry', 'approvals'];
   var ICON = {
     grid: '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>',
@@ -1499,6 +1854,11 @@ var I18N = {
     file: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
     check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
     more: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+    shield: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/>',
+    left: '<polyline points="15 18 9 12 15 6"/>',
+    right: '<polyline points="9 18 15 12 9 6"/>',
+    cal2: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="8" y1="18" x2="8.01" y2="18"/><line x1="12" y1="18" x2="12.01" y2="18"/>',
+    dl: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
     cal: '<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
     out: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>',
     list: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
@@ -1513,8 +1873,10 @@ var I18N = {
     tab: 'dashboard', userId: 'aina', entryId: null, entryDraft: null, entryNote: '', attach: [], drawerId: null, copyDlg: null,
     apFilter: 'pending', exportSel: {}, exportLayout: 'fox', auditF: { user: '', action: '', q: '' }, remFilter: 'open', remDoneId: null,
     payRows: [{ name: 'Staff A', wage: 3200, pcb: 0 }, { name: 'Staff B', wage: 4800, pcb: 85 }, { name: 'Staff C', wage: 6500, pcb: 260 }],
-    payPeriod: '', genPeriod: '', selftest: null, moreOpen: false, confirmReset: false, pasteSource: 'whatsapp', uploadSource: 'upload', pasteText: '', remTitle: ''
+    payPeriod: '', genPeriod: '', selftest: null, moreOpen: false, confirmReset: false, pasteSource: 'whatsapp', uploadSource: 'upload', pasteText: '', remTitle: '',
+    cal: { view: 'month', sel: '', layers: { deadlines: true, documents: true, approvals: true, exports: true }, ledger: 'all', add: false, addTitle: '', focus: '' }
   };
+  var CAL_VIEWS = ['month', 'week', 'agenda'], CAL_LEDGERS = ['all', 'office', 'client'];
 
   /* ---------- helpers ---------- */
   function $(s, r) { return (r || document).querySelector(s); }
@@ -1568,14 +1930,22 @@ var I18N = {
     state.settings = fill(Core.defaultSettings(), state.settings);
     try {
       var u = JSON.parse(localStorage.getItem(UIKEY) || 'null');
-      if (u) { if (u.userId && Core.userById(state, u.userId)) ui.userId = u.userId; if (u.tab && TABS.some(function (x) { return x[0] === u.tab; })) ui.tab = u.tab; }
+      if (u) {
+        if (u.userId && Core.userById(state, u.userId)) ui.userId = u.userId;
+        if (u.tab && TABS.some(function (x) { return x[0] === u.tab; })) ui.tab = u.tab;
+        if (u.cal) {
+          if (CAL_VIEWS.indexOf(u.cal.view) >= 0) ui.cal.view = u.cal.view;
+          if (CAL_LEDGERS.indexOf(u.cal.ledger) >= 0) ui.cal.ledger = u.cal.ledger;
+          Core.CAL_LAYERS.forEach(function (k) { if (u.cal.layers && typeof u.cal.layers[k] === 'boolean') ui.cal.layers[k] = u.cal.layers[k]; });
+        }
+      }
     } catch (e) { /* ignore */ }
     var h = (location.hash || '').replace('#', '');
     if (TABS.some(function (x) { return x[0] === h; })) ui.tab = h;
     if (!Core.userById(state, ui.userId)) ui.userId = state.users[0].id;
   }
   function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); localStorage.setItem(UIKEY, JSON.stringify({ userId: ui.userId, tab: ui.tab })); storageOk = true; } catch (e) { storageOk = false; }
+    try { localStorage.setItem(KEY, JSON.stringify(state)); localStorage.setItem(UIKEY, JSON.stringify({ userId: ui.userId, tab: ui.tab, cal: { view: ui.cal.view, ledger: ui.cal.ledger, layers: ui.cal.layers } })); storageOk = true; } catch (e) { storageOk = false; }
   }
   function commit(msg) { save(); render(); if (msg) toast(msg); }
 
@@ -1864,19 +2234,20 @@ var I18N = {
       res.rows.map(function (x) { return '<tr><td>' + esc(x.name || '—') + '</td>' + r2(x.epfEr) + r2(x.epfEe) + r2(Core.round2(x.socsoEr + x.socsoEe)) + r2(Core.round2(x.eisEr + x.eisEe)) + r2(x.pcb) + '</tr>'; }).join('') +
       '<tr class="tot"><td>' + esc(t('co.totals')) + '</td>' + r2(T.epfEr) + r2(T.epfEe) + r2(Core.round2(T.socsoEr + T.socsoEe)) + r2(Core.round2(T.eisEr + T.eisEe)) + r2(T.pcb) + '</tr></tbody></table></div>';
   }
+  function remItemHTML(r, today) {
+    var st = Core.reminderStatus(r, today);
+    var s = '<div class="rem"><div><div class="t">' + esc(r.title) + '</div><div class="d">' + esc(remDueText(r, today)) + '</div></div><div>' + '<span class="chip st-' + st + '">' + esc(t('st.' + st)) + '</span></div>';
+    if (r.status === 'done') s += '<div class="act muted small">' + esc(t('co.refAmt', { ref: r.refNo || '—', amt: money(r.amount) })) + '</div>';
+    else if (ui.remDoneId === r.id) s += '<div class="act"><div class="done-form"><input id="rd-ref" type="text" placeholder="' + esc(t('co.refNo')) + '"><input id="rd-amt" type="number" step="0.01" min="0" placeholder="' + esc(t('co.amount')) + '"><span class="row"><button class="btn sm primary" data-act="rem-done-save" data-id="' + esc(r.id) + '">' + esc(t('btn.save')) + '</button><button class="btn sm" data-act="rem-done-cancel">' + esc(t('btn.cancel')) + '</button></span></div></div>';
+    else s += '<div class="act"><button class="btn sm" data-act="rem-done-open" data-id="' + esc(r.id) + '">' + esc(t('btn.markDone')) + '</button><button class="btn sm" data-act="rem-pay" data-id="' + esc(r.id) + '">' + esc(t('btn.createPay')) + '</button></div>';
+    return s + '</div>';
+  }
   function vCompliance() {
     var today = Core.todayLocal(), f = ui.remFilter, u = me();
     var list = state.reminders.filter(function (r) { return f === 'all' || (f === 'done' ? r.status === 'done' : r.status !== 'done'); }).sort(function (a, b) { return f === 'done' ? (a.due < b.due ? 1 : -1) : (a.due < b.due ? -1 : 1); });
     var h = '<div class="page-head"><h1>' + esc(t('co.title')) + '</h1><div class="seg tabs2">' +
       [['open', 'co.open'], ['done', 'co.done'], ['all', 'co.all']].map(function (x) { return '<button data-act="rem-filter" data-v="' + x[0] + '" aria-pressed="' + (f === x[0]) + '">' + esc(t(x[1])) + '</button>'; }).join('') + '</div></div><div class="stack">';
-    h += '<p class="note small">' + esc(t('co.demo')) + '</p><div class="grid2"><div class="card">' + (list.length ? list.map(function (r) {
-      var st = Core.reminderStatus(r, today);
-      var s = '<div class="rem"><div><div class="t">' + esc(r.title) + '</div><div class="d">' + esc(remDueText(r, today)) + '</div></div><div>' + '<span class="chip st-' + st + '">' + esc(t('st.' + st)) + '</span></div>';
-      if (r.status === 'done') s += '<div class="act muted small">' + esc(t('co.refAmt', { ref: r.refNo || '—', amt: money(r.amount) })) + '</div>';
-      else if (ui.remDoneId === r.id) s += '<div class="act"><div class="done-form"><input id="rd-ref" type="text" placeholder="' + esc(t('co.refNo')) + '"><input id="rd-amt" type="number" step="0.01" min="0" placeholder="' + esc(t('co.amount')) + '"><span class="row"><button class="btn sm primary" data-act="rem-done-save" data-id="' + esc(r.id) + '">' + esc(t('btn.save')) + '</button><button class="btn sm" data-act="rem-done-cancel">' + esc(t('btn.cancel')) + '</button></span></div></div>';
-      else s += '<div class="act"><button class="btn sm" data-act="rem-done-open" data-id="' + esc(r.id) + '">' + esc(t('btn.markDone')) + '</button><button class="btn sm" data-act="rem-pay" data-id="' + esc(r.id) + '">' + esc(t('btn.createPay')) + '</button></div>';
-      return s + '</div>';
-    }).join('') : '<p class="empty">' + esc(t('co.empty')) + '</p>') + '</div>';
+    h += '<p class="note small">' + esc(t('co.demo')) + '</p><div class="grid2"><div class="card">' + (list.length ? list.map(function (r) { return remItemHTML(r, today); }).join('') : '<p class="empty">' + esc(t('co.empty')) + '</p>') + '</div>';
     h += '<div class="stack"><div class="card stack"><h3>' + esc(t('co.addTitle')) + '</h3><div><span class="lbl">' + esc(t('co.templates')) + '</span><div class="chips" style="margin-top:6px">' +
       [['co.tpl.formc'], ['co.tpl.cp204'], ['co.tpl.stamp'], ['co.tpl.ssm']].map(function (x) { return '<button data-act="rem-tpl" data-k="' + x[0] + '">' + esc(t(x[0])) + '</button>'; }).join('') + '</div></div>' +
       '<div class="field"><label for="rem-title">' + esc(t('co.custom')) + '</label><input id="rem-title" type="text" value="' + esc(ui.remTitle) + '"></div><div class="field"><label for="rem-date">' + esc(t('co.date')) + '</label><input id="rem-date" type="date"></div>' +
@@ -1887,6 +2258,164 @@ var I18N = {
       ui.payRows.map(function (r, i) { return '<tr><td><input class="pay-in" data-i="' + i + '" data-k="name" type="text" value="' + esc(r.name) + '" aria-label="' + esc(t('co.name')) + '"></td><td><input class="pay-in" data-i="' + i + '" data-k="wage" type="number" step="0.01" min="0" value="' + esc(r.wage) + '" style="text-align:right" aria-label="' + esc(t('co.grossWage')) + '"></td><td><input class="pay-in" data-i="' + i + '" data-k="pcb" type="number" step="0.01" min="0" value="' + esc(r.pcb) + '" style="text-align:right" aria-label="' + esc(t('co.pcb')) + '"></td><td><button class="btn sm quiet" data-act="pay-rm" data-i="' + i + '">' + esc(t('btn.remove')) + '</button></td></tr>'; }).join('') + '</tbody></table></div>' +
       '<div class="row"><button class="btn sm" data-act="pay-add">' + esc(t('co.addRow')) + '</button></div><div id="pay-results">' + payResultsHTML() + '</div><div><button class="btn primary" data-act="pay-entries">' + esc(t('btn.payEntries')) + '</button></div></div></div>';
     return h;
+  }
+
+  /* ---------- calendar ---------- */
+  function calLocale() { return lang() === 'ms' ? 'ms-MY' : 'en-GB'; }
+  function calFmt(iso, o) {
+    try { return new Intl.DateTimeFormat(calLocale(), Object.assign({ timeZone: 'UTC' }, o)).format(Core.parseISO(iso)); } catch (e) { return Core.fmtDate(iso); }
+  }
+  var LONG_DATE = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+  function calRange() {
+    var c = ui.cal, ws = state.settings.weekStart;
+    if (c.view === 'week') { var d = Core.weekDays(c.sel, ws); return { from: d[0], to: d[6], days: d }; }
+    if (c.view === 'agenda') return Core.monthBounds(c.sel.slice(0, 7));
+    var g = Core.monthGrid(c.sel.slice(0, 7), ws);
+    return { from: g[0][0].date, to: g[g.length - 1][6].date, grid: g };
+  }
+  function calData() {
+    var r = calRange(), today = Core.todayLocal(), counts = {}, by = {};
+    var all = Core.calendarEvents(state, today, { from: r.from, to: r.to, ledger: ui.cal.ledger });
+    Core.CAL_LAYERS.forEach(function (l) { counts[l] = 0; });
+    all.forEach(function (e) { counts[e.layer]++; if (ui.cal.layers[e.layer]) (by[e.date] = by[e.date] || []).push(e); });
+    return { range: r, today: today, counts: counts, by: by };
+  }
+  function calEvText(ev, full) {
+    if (ev.layer === 'deadlines') return full ? ev.title : ev.short;
+    if (ev.layer === 'documents') return ev.title || t('src.' + ev.source);
+    if (ev.layer === 'approvals') return t('cal.pillApproved', { id: ev.entryId });
+    return ev.title;
+  }
+  function calEvClass(ev) {
+    var c = 'ev ev-' + ev.layer;
+    if (ev.layer === 'deadlines') c += ' s-' + ev.status; else if (ev.layer === 'documents' || ev.layer === 'approvals') c += ' l-' + ev.ledger;
+    return c;
+  }
+  function calStep(dir) { var c = ui.cal; c.sel = c.view === 'week' ? Core.addDays(c.sel, 7 * dir) : Core.shiftMonth(c.sel, dir); }
+  function calSetMonth(ym) {
+    var b = Core.monthBounds(ym); ui.cal.sel = ym + '-' + pad(Math.min(+ui.cal.sel.slice(8), +b.to.slice(8)));
+  }
+  function calFocusOf(el) {
+    var s = '[data-act="' + el.getAttribute('data-act') + '"]';
+    ['data-v', 'data-date'].forEach(function (a) { var v = el.getAttribute(a); if (v !== null) s += '[' + a + '="' + v + '"]'; });
+    ui.cal.focus = s;
+  }
+  function calKpisHTML(today) {
+    var c = ui.cal, s = Core.calendarSummary(state, today, c.sel.slice(0, 7)), m = calFmt(c.sel, { month: 'long' });
+    function tile(cls, label, n, sub, date) {
+      var inner = '<span class="kpi-l">' + esc(label) + '</span><span class="kpi-n">' + esc(n) + '</span><span class="kpi-s">' + esc(sub) + '</span>';
+      return date ? '<button type="button" class="kpi ' + cls + '" data-act="cal-jump" data-date="' + esc(date) + '">' + inner + '</button>' : '<div class="kpi ' + cls + '">' + inner + '</div>';
+    }
+    return '<div class="kpis k4">' +
+      tile(s.overdue ? 'bad' : '', t('cal.kOverdue'), s.overdue, s.overdue ? t('cal.kOverdueSub') : t('cal.kNone'), s.overdueFirst) +
+      tile(s.next7 ? 'warn' : '', t('cal.kSoon'), s.next7, s.next7 ? t('cal.kSoonSub') : t('cal.kNone'), s.next7First) +
+      tile('', t('cal.kMonth', { month: m }), s.monthOpen + s.monthDone, t('cal.kMonthSub', { open: s.monthOpen, done: s.monthDone }), '') +
+      tile('', t('cal.kApproved', { month: m }), s.approvedCount, t('cal.kApprovedSub', { amt: money(s.approvedTotal) }), '') + '</div>';
+  }
+  function calToolbarHTML(d) {
+    var c = ui.cal, ws = state.settings.weekStart;
+    var title = c.view === 'week' ? t('cal.weekOf', { date: calFmt(d.range.days[0], { day: 'numeric', month: 'short', year: 'numeric' }) }) : calFmt(c.sel, { month: 'long', year: 'numeric' });
+    var h = '<div class="cal-bar"><div class="row cal-nav"><button type="button" class="btn icon" data-act="cal-prev" aria-label="' + esc(t('cal.prev')) + '">' + icon('left') + '</button>' +
+      '<button type="button" class="btn icon" data-act="cal-next" aria-label="' + esc(t('cal.next')) + '">' + icon('right') + '</button>' +
+      '<h2 class="cal-title">' + esc(title) + '</h2><button type="button" class="btn sm" data-act="cal-today">' + esc(t('cal.today')) + '</button></div>' +
+      '<div class="row cal-tools"><input id="cal-month" class="cal-month" type="month" value="' + esc(c.sel.slice(0, 7)) + '" aria-label="' + esc(t('cal.jump')) + '">' +
+      '<div class="seg tabs2" role="group" aria-label="' + esc(t('cal.view')) + '">' + [['month', 'cal.month'], ['week', 'cal.week'], ['agenda', 'cal.agenda']].map(function (x) {
+        return '<button type="button" data-act="cal-view" data-v="' + x[0] + '" aria-pressed="' + (c.view === x[0]) + '">' + esc(t(x[1])) + '</button>';
+      }).join('') + '</div></div></div>';
+    h += '<div class="cal-filters"><div class="row cal-layers" role="group" aria-label="' + esc(t('cal.layers')) + '">' + Core.CAL_LAYERS.map(function (l) {
+      return '<button type="button" class="cal-layer" data-act="cal-layer" data-v="' + l + '" aria-pressed="' + !!c.layers[l] + '"><span class="sw sw-' + l + '"></span>' + esc(t('cal.l.' + l)) + ' <b>' + d.counts[l] + '</b></button>';
+    }).join('') + '</div><div class="seg tabs2" role="group" aria-label="' + esc(t('cal.ledger')) + '">' + CAL_LEDGERS.map(function (l) {
+      return '<button type="button" data-act="cal-ledger" data-v="' + l + '" aria-pressed="' + (c.ledger === l) + '">' + esc(l === 'all' ? t('cal.all') : t('ledger.' + l)) + '</button>';
+    }).join('') + '</div><button type="button" class="btn sm" data-act="cal-ics" title="' + esc(t('cal.icsNote')) + '">' + icon('dl') + esc(t('cal.ics')) + '</button></div>';
+    return h;
+  }
+  function calWeekdayNames(ws) {
+    return Core.weekDays('2026-10-05', ws).map(function (iso) { return { name: calFmt(iso, { weekday: 'short' }), we: [0, 6].indexOf(Core.parseISO(iso).getUTCDay()) >= 0 }; });
+  }
+  function calCellHTML(cell, evs, today) {
+    var c = ui.cal, sel = c.sel === cell.date, over = evs.filter(function (e) { return e.layer === 'deadlines' && e.status === 'overdue'; }).length;
+    var dl = calFmt(cell.date, LONG_DATE);
+    var label = !evs.length ? t('cal.cellNone', { date: dl }) : over ? t('cal.cellOver', { date: dl, n: evs.length, o: over }) : evs.length === 1 ? t('cal.cellOne', { date: dl }) : t('cal.cell', { date: dl, n: evs.length });
+    var pills = evs.slice(0, 3).map(function (e) { return '<span class="cal-pill ' + calEvClass(e) + '">' + esc(calEvText(e)) + '</span>'; }).join('') + (evs.length > 3 ? '<span class="cal-more">' + esc(t('cal.more', { n: evs.length - 3 })) + '</span>' : '');
+    var dots = evs.slice(0, 6).map(function (e) { return '<span class="cal-dot ' + calEvClass(e) + '"></span>'; }).join('');
+    var we = cell.dow === 0 || cell.dow === 6;
+    return '<div role="gridcell" class="cal-cell' + (cell.inMonth ? '' : ' out') + (we ? ' we' : '') + (sel ? ' sel' : '') + '" aria-selected="' + sel + '">' +
+      '<button type="button" class="cal-day" data-act="cal-sel" data-date="' + cell.date + '" tabindex="' + (sel ? 0 : -1) + '" aria-label="' + esc(label) + '"' + (cell.date === today ? ' aria-current="date"' : '') + '>' +
+      '<span class="dn' + (cell.date === today ? ' today' : '') + '">' + (+cell.date.slice(8)) + '</span><span class="cal-pills" aria-hidden="true">' + pills + '</span><span class="cal-dots" aria-hidden="true">' + dots + '</span></button></div>';
+  }
+  function calMonthHTML(d) {
+    var names = calWeekdayNames(state.settings.weekStart);
+    return '<div class="cal-grid" role="grid" aria-label="' + esc(calFmt(ui.cal.sel, { month: 'long', year: 'numeric' })) + '"><div class="cal-row cal-head" role="row">' +
+      names.map(function (n) { return '<div role="columnheader" class="cal-wd' + (n.we ? ' we' : '') + '">' + esc(n.name) + '</div>'; }).join('') + '</div>' +
+      d.range.grid.map(function (row) { return '<div class="cal-row" role="row">' + row.map(function (cell) { return calCellHTML(cell, d.by[cell.date] || [], d.today); }).join('') + '</div>'; }).join('') + '</div>';
+  }
+  function calCardHTML(ev) {
+    var sub, id = ev.reminderId || ev.entryId || ev.batchId;
+    if (ev.layer === 'deadlines') sub = t('st.' + ev.status);
+    else if (ev.layer === 'documents') sub = t('type.' + ev.kind) + ' · ' + t('st.' + ev.status);
+    else if (ev.layer === 'approvals') sub = Core.userName(state, ev.by);
+    else sub = t('cal.batchLine', { n: ev.count, amt: money(ev.amount), name: Core.userName(state, ev.by) });
+    var amt = ev.layer === 'documents' || ev.layer === 'approvals' ? ' <span class="num">' + esc(money(ev.amount)) + '</span>' : '';
+    return '<button type="button" class="cev ' + calEvClass(ev) + '" data-act="cal-open" data-layer="' + ev.layer + '" data-id="' + esc(id) + '" data-date="' + ev.date + '"><span class="cev-t">' + esc(calEvText(ev, true)) + '</span><span class="cev-s">' + esc(sub) + amt + '</span></button>';
+  }
+  function calWeekHTML(d) {
+    var ws = state.settings.weekStart;
+    return '<div class="cal-week">' + d.range.days.map(function (day) {
+      var evs = d.by[day] || [], dow = Core.parseISO(day).getUTCDay(), sel = ui.cal.sel === day;
+      return '<section class="wk-col' + (dow === 0 || dow === 6 ? ' we' : '') + (sel ? ' sel' : '') + '" aria-label="' + esc(calFmt(day, LONG_DATE)) + '">' +
+        '<button type="button" class="wk-head" data-act="cal-sel" data-date="' + day + '" aria-pressed="' + sel + '"' + (day === d.today ? ' aria-current="date"' : '') + '><span>' + esc(calFmt(day, { weekday: 'short' })) + '</span><span class="dn' + (day === d.today ? ' today' : '') + '">' + (+day.slice(8)) + '</span><span class="wk-mon">' + esc(calFmt(day, { month: 'short' })) + '</span></button>' +
+        '<div class="wk-evs">' + (evs.length ? evs.map(calCardHTML).join('') : '<p class="wk-none muted small">&mdash;</p>') + '</div></section>';
+    }).join('') + '</div>';
+  }
+  function calAgendaHTML(d) {
+    var days = Object.keys(d.by).sort();
+    if (!days.length) return '<p class="empty">' + esc(t('cal.agendaEmpty', { month: calFmt(ui.cal.sel, { month: 'long', year: 'numeric' }) })) + '</p>';
+    return '<div class="cal-agenda">' + days.map(function (day) {
+      return '<section class="ag-day' + (day === ui.cal.sel ? ' sel' : '') + '"><h4><button type="button" class="ag-h" data-act="cal-sel" data-date="' + day + '">' + esc(calFmt(day, LONG_DATE)) + '</button>' + (day === d.today ? ' <span class="chip st-soon">' + esc(t('cal.relToday')) + '</span>' : '') + '</h4>' + d.by[day].map(calCardHTML).join('') + '</section>';
+    }).join('') + '</div>';
+  }
+  function calAddHTML() {
+    var c = ui.cal;
+    if (!c.add) return '<div><button type="button" class="btn sm" data-act="cal-add-toggle" aria-expanded="false">' + esc(t('cal.addReminder')) + '</button></div>';
+    return '<div class="card flat stack"><div class="field"><label for="cal-title">' + esc(t('cal.reminderTitle')) + '</label><input id="cal-title" type="text" value="' + esc(c.addTitle) + '"></div>' +
+      '<div class="chips">' + ['co.tpl.formc', 'co.tpl.cp204', 'co.tpl.stamp', 'co.tpl.ssm'].map(function (k) { return '<button type="button" data-act="cal-tpl" data-k="' + k + '">' + esc(t(k)) + '</button>'; }).join('') + '</div>' +
+      '<div class="field"><label for="cal-date">' + esc(t('co.date')) + '</label><input id="cal-date" type="date" value="' + esc(c.sel) + '"></div>' +
+      '<div class="row"><button type="button" class="btn primary sm" data-act="cal-add">' + esc(t('btn.add')) + '</button><button type="button" class="btn sm" data-act="cal-add-toggle" aria-expanded="true">' + esc(t('btn.cancel')) + '</button></div></div>';
+  }
+  function calPanelHTML(d) {
+    var c = ui.cal, evs = d.by[c.sel] || [], rel = Core.diffDays(c.sel, d.today);
+    var relTxt = rel === 0 ? t('cal.relToday') : rel === 1 ? t('cal.relTomorrow') : rel === -1 ? t('cal.relYesterday') : rel > 0 ? t('cal.relIn', { n: rel }) : t('cal.relAgo', { n: -rel });
+    var h = '<div><h2 class="cal-ph">' + esc(calFmt(c.sel, LONG_DATE)) + '</h2><p class="muted small">' + esc(relTxt) + ' · ' + esc(evs.length === 1 ? t('cal.itemOne') : t('cal.items', { n: evs.length })) + '</p></div>';
+    h += calAddHTML();
+    if (!evs.length) return h + '<p class="empty">' + esc(t('cal.none')) + '</p>';
+    Core.CAL_LAYERS.forEach(function (l) {
+      var list = evs.filter(function (e) { return e.layer === l; });
+      if (!list.length) return;
+      h += '<section class="cal-sec"><h3>' + esc(t('cal.l.' + l)) + ' <span class="muted">' + list.length + '</span></h3>';
+      if (l === 'deadlines') {
+        h += list.map(function (ev) { var r = state.reminders.filter(function (x) { return x.id === ev.reminderId; })[0]; return r ? remItemHTML(r, d.today) : ''; }).join('');
+      } else if (l === 'documents') {
+        h += '<div class="list">' + list.map(function (ev) { var e = Core.findEntry(state, ev.entryId); return e ? erow(e) : ''; }).join('') + '</div>';
+      } else if (l === 'approvals') {
+        h += '<div class="list">' + list.map(function (ev) {
+          return '<div class="erow" tabindex="0" role="button" data-act="open-drawer" data-id="' + esc(ev.entryId) + '"><div class="er-main"><span class="er-id">' + esc(ev.entryId) + '</span><span class="er-payee">' + esc(calEvText({ layer: 'documents', title: ev.title, source: ev.source })) + '</span><span class="er-desc">' +
+            esc(t('cal.approvedBy', { name: Core.userName(state, ev.by), time: fmtTs(ev.at).slice(11) })) + '</span></div><div class="er-tags">' + ltag(ev.ledger) + chip(ev.status) + '</div><div class="er-amt"><span class="num">' + esc(money(ev.amount)) + '</span></div></div>';
+        }).join('') + '</div>';
+      } else {
+        h += '<div class="list">' + list.map(function (ev) {
+          return '<div class="erow" tabindex="0" role="button" data-act="go" data-tab="export"><div class="er-main"><span class="er-id">' + esc(ev.batchId) + '</span><span class="er-payee">' + esc(t('cal.openExport')) + '</span><span class="er-desc">' +
+            esc(t('cal.batchLine', { n: ev.count, amt: money(ev.amount), name: Core.userName(state, ev.by) })) + '</span></div><div class="er-tags">' + chip('exported') + '</div><div class="er-amt"><span class="num">' + esc(money(ev.amount)) + '</span></div></div>';
+        }).join('') + '</div>';
+      }
+      h += '</section>';
+    });
+    return h;
+  }
+  function vCalendar() {
+    var d = calData(), c = ui.cal;
+    return '<div class="page-head"><h1>' + esc(t('cal.title')) + '</h1></div><div class="stack">' + calKpisHTML(d.today) +
+      '<div class="cal-layout' + (c.view === 'week' ? ' wide' : '') + '"><div class="card cal-card">' + calToolbarHTML(d) + (c.view === 'month' ? calMonthHTML(d) : c.view === 'week' ? calWeekHTML(d) : calAgendaHTML(d)) +
+      '<p class="muted small">' + esc(t('cal.hint')) + '</p></div><aside class="card cal-panel stack" aria-label="' + esc(calFmt(c.sel, LONG_DATE)) + '">' + calPanelHTML(d) + '</aside></div></div>';
   }
 
   function foxProblems() { return Core.validateFoxMap(state.settings.export.map); }
@@ -1950,7 +2479,8 @@ var I18N = {
       return '<div class="row"><input type="text" data-user="' + i + '" data-uk="name" value="' + esc(x.name) + '" aria-label="' + esc(t('se.userName')) + '" style="flex:1 1 9rem;width:auto"><select data-user="' + i + '" data-uk="role" style="width:auto" aria-label="' + esc(t('se.userRole')) + '">' + opts(['clerk', 'approver'], x.role, function (r) { return t('role.' + r); }) + '</select></div>';
     }).join('') + '<div class="row"><input id="new-user" type="text" placeholder="' + esc(t('se.userName')) + '" style="flex:1 1 9rem;width:auto"><button class="btn sm" data-act="user-add">' + esc(t('se.addUser')) + '</button></div></div></div>';
     h += '<div class="grid2 even"><div class="card stack"><h3>' + esc(t('se.dues')) + '</h3><div class="fields">' + ['EPF', 'SOCSO', 'EIS', 'PCB'].map(function (k) { return '<div class="field"><label>' + esc(k + ' · ' + t('se.dueDay')) + '<input type="number" min="1" max="31" step="1" data-set="dueDays.' + k + '" data-type="int" value="' + esc(s.dueDays[k]) + '"></label></div>'; }).join('') + '</div>' +
-      '<div class="field"><label>' + esc(t('se.roll')) + '<select data-set="rollRule">' + opts(['next', 'prev', 'none'], s.rollRule, function (x) { return t('se.roll.' + x); }) + '</select></label></div></div>';
+      '<div class="field"><label>' + esc(t('se.roll')) + '<select data-set="rollRule">' + opts(['next', 'prev', 'none'], s.rollRule, function (x) { return t('se.roll.' + x); }) + '</select></label></div>' +
+      '<div class="field"><label>' + esc(t('se.weekStart')) + '<select data-set="weekStart" data-type="wk">' + opts(['1', '0'], String(s.weekStart), function (x) { return t('se.wk.' + x); }) + '</select></label></div></div>';
     h += '<div class="card stack"><h3>' + esc(t('se.rates')) + '</h3><p class="note warn small">' + esc(t('se.verify')) + '</p><div class="fields">' +
       numField(t('se.epfLow'), 'rates.epfEmployerLow') + numField(t('se.epfHigh'), 'rates.epfEmployerHigh') + numField(t('se.epfThr'), 'rates.epfThreshold') + numField(t('se.epfEe'), 'rates.epfEmployee') +
       numField(t('se.socsoEr'), 'rates.socsoEmployer') + numField(t('se.socsoEe'), 'rates.socsoEmployee') + numField(t('se.socsoCap'), 'rates.socsoCeiling') +
@@ -1982,7 +2512,7 @@ var I18N = {
     return h;
   }
 
-  var VIEWS = { dashboard: vDashboard, inbox: vInbox, entry: vEntry, approvals: vApprovals, compliance: vCompliance, export: vExport, audit: vAudit, setup: vSetup };
+  var VIEWS = { dashboard: vDashboard, inbox: vInbox, entry: vEntry, approvals: vApprovals, calendar: vCalendar, compliance: vCompliance, export: vExport, audit: vAudit, setup: vSetup };
 
   /* ---------- chrome and render ---------- */
   function counts() {
@@ -2011,6 +2541,7 @@ var I18N = {
     if (ui.tab === 'entry') refreshEntryHints();
     renderDrawer();
     window.scrollTo(0, keepScroll);
+    if (ui.tab === 'calendar' && ui.cal.focus) { var f = $(ui.cal.focus); ui.cal.focus = ''; if (f && f.focus) f.focus({ preventScroll: true }); }
   }
   function setTab(tab) {
     ui.tab = tab; ui.moreOpen = false;
@@ -2189,6 +2720,34 @@ var I18N = {
       ps.forEach(function (p) { Core.saveEntry(state, me(), p); });
       commit(t('co.paid', { n: ps.length }));
     },
+    'cal-sel': function (el) { ui.cal.sel = el.getAttribute('data-date'); calFocusOf(el); save(); render(); },
+    'cal-jump': function (el) { ui.cal.sel = el.getAttribute('data-date'); ui.cal.focus = '.cal-day[data-date="' + ui.cal.sel + '"], .wk-head[data-date="' + ui.cal.sel + '"]'; render(); },
+    'cal-prev': function (el) { calStep(-1); calFocusOf(el); render(); },
+    'cal-next': function (el) { calStep(1); calFocusOf(el); render(); },
+    'cal-today': function (el) { ui.cal.sel = Core.todayLocal(); calFocusOf(el); render(); },
+    'cal-view': function (el) { ui.cal.view = el.getAttribute('data-v'); calFocusOf(el); save(); render(); },
+    'cal-layer': function (el) { var k = el.getAttribute('data-v'); ui.cal.layers[k] = !ui.cal.layers[k]; calFocusOf(el); save(); render(); },
+    'cal-ledger': function (el) { ui.cal.ledger = el.getAttribute('data-v'); calFocusOf(el); save(); render(); },
+    'cal-open': function (el) {
+      var layer = el.getAttribute('data-layer'), id = el.getAttribute('data-id');
+      ui.cal.sel = el.getAttribute('data-date');
+      if (layer === 'exports') { setTab('export'); return; }
+      if (layer === 'documents' || layer === 'approvals') { ui.drawerId = id; ui.copyDlg = null; }
+      calFocusOf(el); render();
+    },
+    'cal-add-toggle': function () { ui.cal.add = !ui.cal.add; ui.cal.addTitle = ui.cal.add ? ui.cal.addTitle : ''; render(); var i = $('#cal-title'); if (i) i.focus(); },
+    'cal-tpl': function (el) { ui.cal.addTitle = t(el.getAttribute('data-k')); var i = $('#cal-title'); if (i) { i.value = ui.cal.addTitle; i.focus(); } },
+    'cal-add': function () {
+      var title = val('#cal-title'), due = val('#cal-date');
+      if (!title || !Core.parseISO(due)) { toast(t('err.required') + ': ' + t('cal.reminderTitle') + ', ' + t('co.date'), true); return; }
+      Core.addReminder(state, me(), { kind: 'CUSTOM', title: title, due: due });
+      ui.cal.add = false; ui.cal.addTitle = ''; ui.cal.sel = due; commit(t('co.added'));
+    },
+    'cal-ics': function () {
+      var r = Core.buildICS(state, { labels: { calName: t('cal.ics.cal'), statutory: t('cal.ics.stat'), custom: t('cal.ics.custom'), wage: t('cal.ics.wage') } });
+      if (!r.count) { toast(t('cal.icsEmpty'), true); return; }
+      deliver('accounts-intake-hub-deadlines.ics', r.text);
+    },
     'toggle-sel': function (el) { var id = el.getAttribute('data-id'); ui.exportSel[id] = !ui.exportSel[id]; render(); },
     'sel-all': function (el) {
       var ready = state.entries.filter(function (e) { return e.status === 'approved' && !e.exportBatchId; });
@@ -2244,6 +2803,19 @@ var I18N = {
   });
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape' && (ui.drawerId || ui.copyDlg)) { closeDrawer(); return; }
+    var dayEl = ui.tab === 'calendar' && !ev.altKey && !ev.ctrlKey && !ev.metaKey && ev.target.closest ? ev.target.closest('.cal-day, .wk-head') : null;
+    if (dayEl) {
+      var cur = dayEl.getAttribute('data-date'), ws = state.settings.weekStart, wk = Core.weekDays(cur, ws), nd = null, month = ui.cal.view !== 'week';
+      if (ev.key === 'ArrowLeft') nd = Core.addDays(cur, -1);
+      else if (ev.key === 'ArrowRight') nd = Core.addDays(cur, 1);
+      else if (ev.key === 'ArrowUp' && dayEl.classList.contains('cal-day')) nd = Core.addDays(cur, -7);
+      else if (ev.key === 'ArrowDown' && dayEl.classList.contains('cal-day')) nd = Core.addDays(cur, 7);
+      else if (ev.key === 'Home') nd = wk[0];
+      else if (ev.key === 'End') nd = wk[6];
+      else if (ev.key === 'PageUp') nd = month ? Core.shiftMonth(cur, ev.shiftKey ? -12 : -1) : Core.addDays(cur, -7);
+      else if (ev.key === 'PageDown') nd = month ? Core.shiftMonth(cur, ev.shiftKey ? 12 : 1) : Core.addDays(cur, 7);
+      if (nd) { ev.preventDefault(); ui.cal.sel = nd; ui.cal.focus = '.cal-day[data-date="' + nd + '"], .wk-head[data-date="' + nd + '"]'; render(); return; }
+    }
     if ((ev.key === 'Enter' || ev.key === ' ') && ev.target.matches && ev.target.matches('[data-act][tabindex]') && ev.target.tagName !== 'BUTTON') { ev.preventDefault(); ev.target.click(); }
   });
   document.addEventListener('input', function (ev) {
@@ -2256,6 +2828,7 @@ var I18N = {
     }
     if (el.id === 'paste-text') { ui.pasteText = el.value; $('#paste-result').innerHTML = pasteResultHTML(); return; }
     if (el.id === 'rem-title') { ui.remTitle = el.value; return; }
+    if (el.id === 'cal-title') { ui.cal.addTitle = el.value; return; }
     if (el.classList && el.classList.contains('pay-in')) {
       var r = ui.payRows[+el.getAttribute('data-i')], k = el.getAttribute('data-k');
       r[k] = k === 'name' ? el.value : el.value; $('#pay-results').innerHTML = payResultsHTML(); return;
@@ -2273,6 +2846,7 @@ var I18N = {
     var el = ev.target;
     if (el.id === 'user-select') { ui.userId = el.value; commit(); return; }
     if (el.id === 'file-input') { addFiles(el.files, ui.uploadSource); el.value = ''; return; }
+    if (el.id === 'cal-month') { if (/^\d{4}-\d{2}$/.test(el.value)) { calSetMonth(el.value); ui.cal.focus = '#cal-month'; render(); } return; }
     if (el.id === 'f-files') {
       Array.prototype.forEach.call(el.files, function (f) { var url = ''; try { url = URL.createObjectURL(f); } catch (x) { /* ignore */ } ui.attach.push({ name: f.name, size: f.size, type: f.type || '', url: url }); });
       $('#attach-list').innerHTML = attachHTML(ui.attach); el.value = ''; return;
@@ -2283,7 +2857,7 @@ var I18N = {
     var ds = el.getAttribute('data-set');
     if (ds) {
       var type = el.getAttribute('data-type'), nv = el.value;
-      if (type === 'bool') nv = el.checked; else if (type === 'num') nv = Math.max(0, num(nv)); else if (type === 'int') nv = Math.min(31, Math.max(1, Math.floor(num(nv)))); else if (type === 'delim') nv = DELIMS[nv];
+      if (type === 'bool') nv = el.checked; else if (type === 'num') nv = Math.max(0, num(nv)); else if (type === 'int') nv = Math.min(31, Math.max(1, Math.floor(num(nv)))); else if (type === 'delim') nv = DELIMS[nv]; else if (type === 'wk') nv = nv === '0' ? 0 : 1;
       var old = getPath(state.settings, ds); setPath(state.settings, ds, nv);
       var b = {}, a = {}; b[ds] = old; a[ds] = nv; Core.audit(state, me(), 'settings', '', b, a, ''); commit(t('se.changed')); return;
     }
@@ -2309,7 +2883,7 @@ var I18N = {
 
   /* ---------- start ---------- */
   loadAll();
-  ui.payPeriod = prevMonth(); ui.genPeriod = prevMonth();
+  ui.payPeriod = prevMonth(); ui.genPeriod = prevMonth(); ui.cal.sel = Core.todayLocal();
   getDl();
   render();
 
